@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
+    <title>ASCII Geometry Dash</title>
+    <style>
+        html, body {
+            background-color: #0d0d0d; color: #fff; font-family: 'Courier New', Courier, monospace;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            height: 100%; width: 100%; margin: 0; padding: 0; overflow: hidden; text-align: center;
+            -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent;
+        }
+        #game-container { border: 2px solid #555; padding: 2px; background-color: #000; }
+        #game-screen { font-size: 8px; line-height: 0.85; letter-spacing: -0.2px; white-space: pre; color: #ccc; }
+        #button-container { display: flex; gap: 10px; }
+        button { margin-top: 10px; padding: 10px 20px; font-size: 16px; cursor: pointer; background-color: #333; border: 1px solid #777; color: #fff; }
+        .player { color: #FFFF00; font-weight: bold; } .solid { color: #FFFFFF; } .enemy { color: #FF3333; }
+        .portal-ship { color: #ff80ed; } .portal-ball { color: #ff9900; } .portal-wave { color: #38bdf8; }
+        .portal-robot { color: #aaaaaa; } .portal-cube { color: #4ade80; }
+        .portal-grav-up { color: #f97316; } .portal-grav-down { color: #3b82f6; }
+        .orb-yellow { color: #facc15; } .orb-pink { color: #ec4899; } .orb-red { color: #dc2626; } .orb-blue { color: #38bdf8; }
+        .pad-yellow { color: #facc15; } .pad-pink { color: #ec4899; } .pad-red { color: #dc2626; } .pad-blue { color: #38bdf8; }
+        .win { color: #84cc16; }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <pre id="game-screen"></pre>
+    </div>
+    <div id="button-container">
+        <button id="start-button">Start</button>
+        <button id="reset-button" style="display: none;">Reset</button>
+    </div>
+    <div id="info" style="margin-top: 5px; color: #aaa; min-height: 20px;"></div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+
+    const gameScreen = document.getElementById('game-screen');
+    const startButton = document.getElementById('start-button');
+    const resetButton = document.getElementById('reset-button');
+    const infoDisplay = document.getElementById('info');
+
+    const levelText = `
+CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCF
+00000000000000000000000000000000000000000000000000000000000BB000BBF
+00000000000000000000000000000000000000000000000000000000000BB000BBF
+00000000000000000000000000000000000000000000000000000000000BBBBBBBF
+00000000000000000000000000000000000000000000000000000000000BBBBBBBF
+00000000000000000000000000000000000000000000000B000000000000000000F
+00000000000000000000000000000000000000000000000s000000000000000000F
+0000000000000000000000000000000000000000000000000000y0000000000000F
+0000000000000000000000000000000000000000000000000S000000BBBBBBBBBBF
+000000000000000000000000000000000000000S0BBBBBBBBB000000000BBBBBBBF
+00000000000000000000SS0000BBBBBBBBBBB00B0000000000000000000BB000BBF
+P000000000000SBBBBBBBBBBBBBBBBBBBBBBBSSSSSSSSSSSSSSSSSSSSSSBB000BBF
+GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGF
+`;
+
+    const SCREEN_WIDTH_CHARS = 240, SCREEN_HEIGHT_CHARS = 80;
+    const GAME_UNITS_PER_BLOCK = 30;
+    const CHARS_PER_BLOCK_V = 3, CHARS_PER_BLOCK_H = 6;
+
+    const PHYSICS_TICK_RATE = 60;
+    const PHYSICS_DELTA_TIME = 1 / PHYSICS_TICK_RATE;
+    const PHYSICS = {
+        cube: {
+            gravity: 2955 / 10.0, hSpeed: 258.0 / 4.58,
+            jumpVelocity: -724.5 / 10.0,
+        },
+        ship: {
+            gravity: 2955 / 15.0,
+            thrust: -4432.5 / 15.0,
+            hSpeed: 258.0 / 12.0,
+            maxUpwardVel: -25.0,
+            maxDownwardVel: 25.0,
+        },
+        ball: {
+            gravity: 2955 / 10.0, hSpeed: 258.0 / 4.58,
+        },
+        wave: {
+            hSpeed: 258.0 / 4.58,
+        },
+        robot: {
+            gravity: 2955 / 10.0, hSpeed: 258.0 / 4.58,
+            jumpVelocity: -724.5 / 10.0,
+        }
+    };
+
+    const SHAPES = {
+        player: { cube:  ['╭███╮','█████','╰███╯'], ship:  ['  ╱','-██╮','`██╯'], ball:  ['╭─O─╮','╰─O─╯'], wave:  ['╱','─','╲'], robot: ['[O.O]','-▓-',' / \\ '], dead: ['X X',' X ','X X'] },
+        block: { solid: ['██████','██████','██████'] },
+        spike_up: ['  ^  ',' / \\ ','/▒█▒\\'], spike_down: ['\\▒█▒/',' \\ / ','  v  '],
+        orb_yellow: ['╭───╮','( O )','╰───╯'], orb_pink: ['╭───╮','( p )','╰───╯'], orb_red: ['╭───╮','( R )','╰───╯'], orb_blue: ['╭───╮','( B )','╰───╯'],
+        pad_yellow: ['██████','======'], pad_pink: ['██████','pppppp'], pad_red: ['██████','RRRRRR'], pad_blue: ['██████','BBBBBB'],
+        portal: ['╱╲','||','╲╱'], win: ['\\*W*/','* I *','/*N*\\'],
+    };
+    
+    const TILE_MAP = {
+        'P': { type: 'player_start' }, 'F': { type: 'win' },
+        'B': { type: 'block_solid' }, 'G': { type: 'block_solid' }, 'C': { type: 'block_solid' },
+        'S': { type: 'spike_up' }, 's': { type: 'spike_down' },
+        'y': { type: 'orb_yellow' }, 'Y': { type: 'pad_yellow' },
+        'r': { type: 'orb_red' }, 'R': { type: 'pad_red' },
+        '(pj)': { type: 'orb_pink' }, '(Pj)': { type: 'pad_pink' },
+        '(bg)': { type: 'orb_blue' }, '(Bg)': { type: 'pad_blue' },
+        '1': { type: 'portal_cube' }, '2': { type: 'portal_ship' }, '3': { type: 'portal_ball' }, '4': { type: 'portal_wave' },
+        '(Gn)': { type: 'portal_grav_down' }, '(Gr)': { type: 'portal_grav_up' },
+    };
+
+    let player, camera, gameRunning, inputState = { holding: false, pressedThisFrame: false }, timeAccumulator, screenBuffer, isGameOver, levelObjects, domGrid, lastScreenBuffer;
+    
+    function initializeDomGrid() {
+        const fragment = document.createDocumentFragment();
+        domGrid = [];
+        for (let y = 0; y < SCREEN_HEIGHT_CHARS; y++) {
+            const row = [];
+            for (let x = 0; x < SCREEN_WIDTH_CHARS; x++) {
+                const span = document.createElement('span');
+                span.textContent = ' ';
+                fragment.appendChild(span);
+                row.push(span);
+            }
+            fragment.appendChild(document.createTextNode('\n'));
+            domGrid.push(row);
+        }
+        gameScreen.innerHTML = '';
+        gameScreen.appendChild(fragment);
+    }
+
+    function parseLevel(text) {
+        const lines = text.trim().split('\n'); const parsedObjects = []; let playerStart = { x: 5, y: 5 };
+        for (let y = 0; y < lines.length; y++) { const line = lines[y];
+            for (let x = 0; x < line.length; x++) {
+                const char = line[x]; if (char === '0' || char === ' ') continue; let token = char; let isUpsideDown = false;
+                if (char === '(') { const endIndex = line.indexOf(')', x); if (endIndex !== -1) { token = line.substring(x, endIndex + 1); x = endIndex; } }
+                if (line[x + 1] === '.' && line[x + 2] === 'U') { isUpsideDown = true; x += 2; }
+                let definition = TILE_MAP[token]; if (!definition) continue;
+                if (definition.type === 'player_start') { playerStart = { x: x, y: y }; continue; }
+                if (isUpsideDown) { if (definition.type === 'spike_up') definition = { type: 'spike_down' }; }
+                parsedObjects.push({ type: definition.type, x: x, y: y });
+            }
+        }
+        return { objects: parsedObjects, playerStart };
+    }
+
+    function resetGame() {
+        const parsedLevel = parseLevel(levelText); levelObjects = [];
+        for(const obj of parsedLevel.objects) {
+            levelObjects.push({ ...obj, px: obj.x * CHARS_PER_BLOCK_H, py: obj.y * CHARS_PER_BLOCK_V, pw: (obj.width || 1) * CHARS_PER_BLOCK_H, ph: (obj.height || 1) * CHARS_PER_BLOCK_V });
+        }
+        player = {
+            x: parsedLevel.playerStart.x * CHARS_PER_BLOCK_H, y: parsedLevel.playerStart.y * CHARS_PER_BLOCK_V,
+            w: 0, h: 0, vx: PHYSICS.cube.hSpeed, vy: 0,
+            gamemode: 'cube', gravity: PHYSICS.cube.gravity, onGround: false, angle: 0,
+            isDead: false,
+        };
+        camera = { x: 0 }; gameRunning = false; isGameOver = false; timeAccumulator = 0;
+        inputState = { holding: false, pressedThisFrame: false };
+        startButton.style.display = 'inline-block';
+        resetButton.style.display = 'none';
+        infoDisplay.textContent = "Tap Start to Play!";
+        initScreenBuffer();
+    }
+    
+    function startGame() {
+        if (gameRunning || player.isDead || isGameOver) return;
+        gameRunning = true; lastTime = performance.now();
+        startButton.style.display = 'none';
+        resetButton.style.display = 'inline-block';
+        requestAnimationFrame(gameLoop);
+    }
+
+    function handleInputDown(e) { e.preventDefault(); if (inputState) { inputState.holding = true; inputState.pressedThisFrame = true; } }
+    function handleInputUp(e) { e.preventDefault(); if (inputState) inputState.holding = false; }
+    window.addEventListener('keydown', handleInputDown); window.addEventListener('keyup', handleInputUp);
+    window.addEventListener('mousedown', handleInputDown); window.addEventListener('mouseup', handleInputUp);
+    window.addEventListener('touchstart', handleInputDown, { passive: false }); window.addEventListener('touchend', handleInputUp, { passive: false });
+    
+    startButton.addEventListener('click', startGame);
+    resetButton.addEventListener('click', () => { endLevel("Reset!", false); });
+    
+    function handleInteractions() {
+        let playerBox = { x: player.x, y: player.y, w: player.w, h: player.h };
+        for (const obj of levelObjects) {
+            if (obj.type.startsWith('block') || obj.type.startsWith('spike')) continue;
+            if (Math.abs(obj.px - player.x) > 150) continue;
+            let objBox = { x: obj.px, y: obj.py, w: obj.pw, h: obj.ph };
+            const type = obj.type;
+            if (type.startsWith('orb')) {
+                const orbHitboxScale = 1.2; const biggerWidth = objBox.w * orbHitboxScale; const biggerHeight = objBox.h * orbHitboxScale;
+                objBox = { x: objBox.x - (biggerWidth - objBox.w) / 2, y: objBox.y - (biggerHeight - objBox.h) / 2, w: biggerWidth, h: biggerHeight };
+            }
+            const isColliding = playerBox.x < objBox.x + objBox.w && playerBox.x + playerBox.w > objBox.x && playerBox.y < objBox.y + objBox.h && playerBox.y + playerBox.h > objBox.y;
+            if (isColliding) {
+                if (type.startsWith('portal')) {
+                     const lastGamemode = player.gamemode;
+                     let newGamemode = player.gamemode;
+                     switch(type) {
+                        case 'portal_ship': newGamemode = 'ship'; break; case 'portal_ball': newGamemode = 'ball'; break;
+                        case 'portal_wave': newGamemode = 'wave'; break; case 'portal_robot': newGamemode = 'robot'; break;
+                        case 'portal_cube': newGamemode = 'cube'; break; case 'portal_grav_up': player.gravity = -Math.abs(PHYSICS[player.gamemode].gravity); break;
+                        case 'portal_grav_down': player.gravity = Math.abs(PHYSICS[player.gamemode].gravity); break;
+                    }
+                    if (lastGamemode !== newGamemode) {
+                        player.gamemode = newGamemode;
+                        const newModePhysics = PHYSICS[player.gamemode];
+                        player.gravity = newModePhysics.gravity; player.vx = newModePhysics.hSpeed;
+                        if(player.gamemode === 'wave') player.vy = -player.vx;
+                        if (player.gamemode === 'ship') {
+                            console.groupCollapsed(`%c[PORTAL] Switched to SHIP mode.`, 'color: #ff80ed; font-weight: bold');
+                            console.log('New Physics Constants:', newModePhysics);
+                            console.log(`Gravity: ${player.gravity.toFixed(2)}, Thrust: ${newModePhysics.thrust.toFixed(2)}`);
+                            console.groupEnd();
+                        }
+                    }
+                }
+                else if (type.startsWith('pad_') && player.vy >= 0) { player.vy = PHYSICS.cube.jumpVelocity * Math.sign(player.gravity); }
+                else if (type.startsWith('orb_') && inputState.pressedThisFrame) { player.vy = PHYSICS.cube.jumpVelocity * Math.sign(player.gravity); inputState.pressedThisFrame = false; }
+                else if (type === 'win') return endLevel("You Win!", true);
+            }
+        }
+    }
+
+    function updatePhysics() {
+        if (!gameRunning) return;
+        player.w = SHAPES.player[player.gamemode][0]?.length || 1; player.h = SHAPES.player[player.gamemode].length || 1;
+        const modePhysics = PHYSICS[player.gamemode]; const gravSign = Math.sign(player.gravity);
+        switch(player.gamemode) {
+            case 'cube': if (player.onGround && inputState.pressedThisFrame) player.vy = modePhysics.jumpVelocity * gravSign; break;
+            case 'ship':
+                let netAcceleration = player.gravity;
+                if (inputState.holding) {
+                    netAcceleration += modePhysics.thrust;
+                }
+                player.vy += netAcceleration * PHYSICS_DELTA_TIME;
+                const preClampVy = player.vy;
+                player.vy = Math.max(modePhysics.maxUpwardVel, Math.min(modePhysics.maxDownwardVel, player.vy));
+                if (preClampVy !== player.vy) {
+                    console.warn(`[SHIP DEBUG] Velocity Clamped! Was: ${preClampVy.toFixed(2)}, Now: ${player.vy.toFixed(2)} (Limits: ${modePhysics.maxUpwardVel} to ${modePhysics.maxDownwardVel})`);
+                }
+                break;
+            case 'ball': if(player.onGround && inputState.pressedThisFrame){ player.gravity *= -1; } break;
+            case 'wave': if (inputState.pressedThisFrame) player.vy *= -1; break;
+            case 'robot': if (player.onGround && inputState.pressedThisFrame) player.vy = modePhysics.jumpVelocity * gravSign; break;
+        }
+        
+        player.x += player.vx * PHYSICS_DELTA_TIME;
+        for (const obj of levelObjects) {
+            if (!obj.type.startsWith('block') && !obj.type.startsWith('spike')) continue;
+            if (Math.abs(obj.px - player.x) > 150) continue;
+            const playerBox = { x: player.x, y: player.y, w: player.w, h: player.h };
+            const objBox = { x: obj.px, y: obj.py, w: obj.pw, h: obj.ph };
+            if (playerBox.x < objBox.x + objBox.w && playerBox.x + playerBox.w > objBox.x && playerBox.y < objBox.y + objBox.h && playerBox.y + playerBox.h > objBox.y) {
+                if (obj.type.startsWith('block') && (player.gamemode === 'cube' || player.gamemode === 'ship')) {
+                    if (player.gamemode === 'ship') console.error('[SHIP DEBUG] Wall Collision -> DEATH');
+                    return endLevel("Ouch!", false);
+                }
+                if (player.vx > 0) player.x = objBox.x - player.w; else if(player.vx < 0) player.x = objBox.x + objBox.w;
+            }
+        }
+        if (player.gamemode !== 'wave') player.vy += player.gravity * PHYSICS_DELTA_TIME;
+        player.y += player.vy * PHYSICS_DELTA_TIME;
+        player.onGround = false;
+        for (const obj of levelObjects) {
+            if (!obj.type.startsWith('block') && !obj.type.startsWith('spike')) continue;
+            if (Math.abs(obj.px - player.x) > 150) continue;
+            const playerBox = { x: player.x, y: player.y, w: player.w, h: player.h };
+            const objBox = { x: obj.px, y: obj.py, w: obj.pw, h: obj.ph };
+            if (playerBox.x < objBox.x + objBox.w && playerBox.x + playerBox.w > objBox.x && playerBox.y < objBox.y + objBox.h && playerBox.y + playerBox.h > objBox.y) {
+                const type = obj.type;
+                if (type.startsWith('spike')) {
+                    const isLethalContact = (type === 'spike_up' && playerBox.y + playerBox.h > objBox.y + objBox.ph * 0.66) || (type === 'spike_down' && playerBox.y < objBox.y + objBox.ph * 0.33);
+                    if (isLethalContact) {
+                         if (player.gamemode === 'ship') console.error('[SHIP DEBUG] Spike Collision -> DEATH');
+                         return endLevel("Ouch!", false);
+                    }
+                }
+                if (type.startsWith('block')) {
+                    if (player.vy > 0) {
+                        player.y = obj.py - player.h; player.vy = 0; if (player.gravity > 0) player.onGround = true;
+                    } else if (player.vy < 0) {
+                        if(player.gamemode === 'cube') return endLevel("Ouch!", false);
+                        if(player.gamemode === 'ship') console.log('[SHIP DEBUG] Ceiling Collision -> SAFE');
+                        player.y = obj.py + obj.ph; player.vy = 0; if (player.gravity < 0) player.onGround = true;
+                    }
+                }
+            }
+        }
+        handleInteractions();
+    }
+    
+    function rotateShape(shape, angle) { return shape; }
+    function initScreenBuffer() {
+        screenBuffer = Array.from({ length: SCREEN_HEIGHT_CHARS }, () => Array.from({ length: SCREEN_WIDTH_CHARS }, () => ({ char: ' ', className: '' })));
+        lastScreenBuffer = Array.from({ length: SCREEN_HEIGHT_CHARS }, () => Array.from({ length: SCREEN_WIDTH_CHARS }, () => ({ char: '?', className: '?' })));
+    }
+    function drawShape(x, y, shape, className) {
+        for (let r = 0; r < shape.length; r++) { for (let c = 0; c < shape[r].length; c++) {
+            const drawX = Math.floor(x + c), drawY = Math.floor(y + r);
+            if (drawY >= 0 && drawY < SCREEN_HEIGHT_CHARS && drawX >= 0 && drawX < SCREEN_WIDTH_CHARS && shape[r][c] !== ' ') {
+                screenBuffer[drawY][drawX] = { char: shape[r][c], className }; } } }
+    }
+    function render() {
+        for (let y = 0; y < SCREEN_HEIGHT_CHARS; y++) { for (let x = 0; x < SCREEN_WIDTH_CHARS; x++) {
+            screenBuffer[y][x] = { char: ' ', className: '' };
+        }}
+        camera.x = player.x - 40;
+        for(const obj of levelObjects) {
+             if (obj.px + obj.pw < camera.x || obj.px > camera.x + SCREEN_WIDTH_CHARS) continue;
+             const screenX = obj.px - camera.x, screenY = obj.py;
+             let shape; let className = obj.type.replace(/_/g, '-');
+             if(obj.type === 'block_solid') { shape = SHAPES.block.solid; }
+             else if(obj.type === 'spike_up') { shape = SHAPES.spike_up; }
+             else if(obj.type === 'spike_down') { shape = SHAPES.spike_down; }
+             else if(obj.type.startsWith('pad_')) { shape = SHAPES.pad_yellow; }
+             else if(obj.type.startsWith('orb_')) { shape = SHAPES.orb_yellow; }
+             else if(obj.type.startsWith('portal')) { shape = SHAPES.portal; }
+             else if(obj.type === 'win') { shape = SHAPES.win; }
+             if(shape) drawShape(screenX, screenY, shape, className);
+        }
+        let playerShape;
+        if (player.isDead) { playerShape = SHAPES.player.dead; }
+        else { playerShape = SHAPES.player[player.gamemode]; if (player.angle !== 0) playerShape = rotateShape(playerShape, player.angle); }
+        player.w = playerShape[0]?.length || 1; player.h = playerShape.length || 1;
+        drawShape(player.x - camera.x, player.y, playerShape, 'player');
+        
+        for (let y = 0; y < SCREEN_HEIGHT_CHARS; y++) {
+            for (let x = 0; x < SCREEN_WIDTH_CHARS; x++) {
+                const current = screenBuffer[y][x];
+                const last = lastScreenBuffer[y][x];
+                if (current.char !== last.char || current.className !== last.className) {
+                    domGrid[y][x].textContent = current.char;
+                    domGrid[y][x].className = current.className;
+                }
+            }
+        }
+        lastScreenBuffer = screenBuffer.map(row => row.map(cell => ({...cell})));
+    }
+
+    function endLevel(message, isWin) {
+        if (isGameOver || player.isDead) return;
+        gameRunning = false;
+        
+        if (isWin) {
+            isGameOver = true;
+            infoDisplay.textContent = message;
+            infoDisplay.style.color = '#84cc16';
+        } else {
+            player.isDead = true;
+            infoDisplay.textContent = message;
+            infoDisplay.style.color = '#FF3333';
+            render();
+            setTimeout(() => {
+                resetGame();
+                render();
+            }, 750);
+        }
+    }
+
+    let lastTime = 0;
+    function gameLoop(timestamp) {
+        if (!gameRunning) return; requestAnimationFrame(gameLoop);
+        const elapsed = (timestamp - lastTime) / 1000; lastTime = timestamp;
+        timeAccumulator += Math.min(elapsed, 0.1);
+        while (timeAccumulator >= PHYSICS_DELTA_TIME) {
+            updatePhysics(); if(!gameRunning) break;
+            timeAccumulator -= PHYSICS_DELTA_TIME; inputState.pressedThisFrame = false;
+        }
+        render();
+        if (!isGameOver && !player.isDead) {
+            const gravityDir = player.gravity > 0 ? '↓' : '↑';
+            infoDisplay.textContent = `Mode: ${player.gamemode} | Gravity: ${gravityDir}`;
+            infoDisplay.style.color = '#aaa';
+        }
+    }
+    
+    initializeDomGrid();
+    resetGame();
+    render();
+    infoDisplay.textContent = "Tap Start to Play!";
+});
+</script>
+</body>
+</html>
