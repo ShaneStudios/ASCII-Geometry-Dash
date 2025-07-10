@@ -2,7 +2,7 @@
 
 Welcome to ASCII Geometry Dash, a playable web-based recreation of the core Geometry Dash physics engine, rendered entirely in ASCII characters. This project started as an in-depth research exploration into the game's physics and evolved into a flexible, data-driven game engine that runs in any modern browser.
 
-This is a **work in progress**. While the core engine is stable, there may be bugs, and some features are still being polished. See the [Changelog](CHANGELOG.md) for version history.
+This is a **work in progress**. While the core engine is stable, there may be bugs, and some features are still being polished. See the [Changelog](changelog.md) for version history.
 
 ## Features
 
