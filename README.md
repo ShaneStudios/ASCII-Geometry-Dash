@@ -6,17 +6,26 @@ This is a **work in progress**. While the core engine is stable, there may be bu
 
 ## Features
 
-*   **Authentic Physics Engine:** The engine is built on the verified physics constants of the original game, featuring a professional-grade, axis-separated collision system to prevent bugs.
-*   **Gamemode-Specific Physics:** Each gamemode (Cube, Ship, Ball, etc.) has its own, independently tuned set of physics constants for an authentic feel.
+*   **Authentic Physics Engine:** The engine is built on the verified physics constants of the original game, featuring a professional-grade, axis-separated collision system to prevent bugs. The physics are now calculated at 60 ticks per second for a smoother experience.
+*   **Gamemode-Specific Physics:** Each gamemode (Cube, Ship, Ball, etc.) has its own, independently tuned set of physics constants for an authentic feel, including correct jump arcs and controllable ship flight.
+*   **Full Orb & Pad Functionality:** Yellow, Pink, Red, and Blue orbs and pads are all implemented with their correct jump strengths and gravity-flipping mechanics.
+*   **Modern UI & Level Management:**
+    *   A sleek, responsive interface that works on both desktop and mobile.
+    *   A slide-out menu for level selection.
+    *   Separate lists for built-in and custom levels.
+*   **Level Persistence and Sharing:**
+    *   **Import:** Load custom levels from `.txt` files.
+    *   **Export:** Save your creations to `.txt` files to share with others.
+    *   **LocalStorage:** Your imported custom levels are saved in your browser so they are there when you come back.
 *   **Text-Based Level Design:** Levels are designed using a simple, readable text format embedded directly in the HTML file. No external tools required!
 *   **High-Fidelity ASCII Rendering:** Utilizes a tiny font size and a large character grid to create detailed shapes and smooth-feeling motion, with an optimized renderer that only updates changed characters.
-*   **Accurate Hitboxes:** Implements nuanced hitboxes, especially for spikes, allowing for precise gameplay that feels fair and true to the original.
+*   **Accurate Hitboxes & Death Mechanics:** Implements nuanced hitboxes for spikes and authentic death conditions for each gamemode (e.g., cube dies on ceiling hit, ship does not). Includes a proper "death explosion" and automatic respawn cycle.
 
 ## How to Play
 
-1.  **Download:** Download the `index.html` file from this repository.
+1.  **Download:** Download the `.html` file from this repository.
 2.  **Open:** Open the file in any modern web browser (like Chrome, Firefox, or Safari).
-3.  **Start:** Click the "Start" button to begin the level.
+3.  **Start:** Click the "Start" button to begin the level. You can select different levels from the menu (☰).
 4.  **Control:**
     *   **Desktop:** Use the `Space Bar`, `Up Arrow`, or `Mouse Click` to jump or use your gamemode's ability.
     *   **Mobile:** Simply tap anywhere on the screen.
@@ -32,21 +41,22 @@ Making your own level is the easiest way to customize the game.
 
 1.  **Open the HTML File:** Open the `.html` file in a text editor (like VS Code, Sublime Text, or even Notepad).
 
-2.  **Find `levelText`:** Locate the constant named `levelText` in the `<script>` section. It will look like this:
+2.  **Find `BUILT_IN_LEVELS`:** To edit the default levels, locate the `BUILT_IN_LEVELS` array in the `<script>` section. You can modify the `data` property of any level.
 
     ```javascript
-    const levelText = `
-    CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
-    00000000000000000000000000000000000000000000000000
-    ...
-    P0000000000SBBBBBBBBBBBBBBBBBBBBBBBBSSSSSSSSSSSSSS
-    GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG
-    `;
+    const BUILT_IN_LEVELS = [
+        {
+            name: "My New Level",
+            data: `
+    C...
+    P...
+    G...
+    `
+        }
+    ];
     ```
 
-3.  **Edit the Level:** Modify the text within the backticks (`` ` ``). Each character represents a space in the game world, which is 3 characters tall and 6 characters wide.
-
-4.  **Use the Key:** Use the following characters and codes to place objects.
+3.  **Use the Key:** Use the following characters and codes to place objects.
 
 | Code | Object | Description |
 | :--- | :--- | :--- |
@@ -60,12 +70,12 @@ Making your own level is the easiest way to customize the game.
 | `s` | Spike (Upside Down) | A spike on a ceiling. |
 | `y` | Yellow Orb | Jump when tapped. |
 | `Y` | Yellow Pad | Jump on contact. |
-| `r` | Red Orb | _(Ready for implementation)_ |
-| `R` | Red Pad | _(Ready for implementation)_ |
-| `(pj)` | Pink Orb | _(Ready for implementation)_ |
-| `(Pj)` | Pink Pad | _(Ready for implementation)_ |
-| `(bg)` | Blue Orb | _(Ready for implementation)_ |
-| `(Bg)` | Blue Pad | _(Ready for implementation)_ |
+| `r` | Red Orb | Larger jump when tapped. |
+| `R` | Red Pad | Larger jump on contact. |
+| `(pj)` | Pink Orb | Smaller jump when tapped. |
+| `(Pj)` | Pink Pad | Smaller jump on contact. |
+| `(bg)` | Blue Orb | Flips gravity and `vy` when tapped. |
+| `(Bg)` | Blue Pad | Flips gravity and `vy` on contact. |
 | `1` | Cube Portal | Switches the player to Cube mode. |
 | `2` | Ship Portal | Switches the player to Ship mode. |
 | `3` | Ball Portal | Switches the player to Ball mode. |
@@ -74,7 +84,7 @@ Making your own level is the easiest way to customize the game.
 | `(gr)` | Gravity Portal (Reverse) | Sets gravity to reversed (upward). |
 | `.U` | **Upside Down Modifier** | Place after a code to flip it (e.g., `S.U` = `s`). |
 
-5.  **Save and Play:** Save the `.html` file and open it in your browser to play your custom level!
+4.  **Save and Play:** Save the `.html` file and open it in your browser to play your custom level! You can also use the **Import/Export** features in the in-game menu to manage levels as `.txt` files.
 
 ### Modifying the Code (Advanced)
 
