@@ -14,6 +14,9 @@ This update introduces updated an ball trajectory, support for multiple levels &
 ### Fixed:
 - **Ball Trajectory:** The ball gamemode now has a more accurate trajcetory with an updated method of calculating the path.
 - **Player Doesn't Disappear:** Thre player no longer disappears from the game wheb hitting specific orbs or pads. More info on this fix in *Added: Remaining Orb/Pad Functions*.
+ 
+### Changed:
+- **Revamped Page Style:** The style for ASCII GD has been revamped to be more modern instead of the old bleak and boring style.
 
 ### Added:
 - **Support For Multiple Levels:** There is now support for multiple levels, complete with a level menu that shows Default levels and Custom levels.
