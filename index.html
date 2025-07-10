@@ -5,34 +5,197 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
     <title>ASCII Geometry Dash</title>
     <style>
-        html, body {
-            background-color: #0d0d0d; color: #fff; font-family: 'Courier New', Courier, monospace;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            height: 100%; width: 100%; margin: 0; padding: 0; overflow: hidden; text-align: center;
-            -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent;
+        :root {
+            --bg-color: #1a1a1a;
+            --surface-color: #2c2c2c;
+            --primary-color: #eab308;
+            --text-color: #e5e7eb;
+            --text-muted-color: #9ca3af;
+            --border-color: #4b5563;
         }
-        #game-container { border: 2px solid #555; padding: 2px; background-color: #000; }
-        #game-screen { font-size: 8px; line-height: 0.85; letter-spacing: -0.2px; white-space: pre; color: #ccc; }
+        html, body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            width: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            text-align: center;
+            -webkit-user-select: none; user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        #game-wrapper {
+            border: 2px solid var(--border-color);
+            padding: 10px;
+            background-color: var(--surface-color);
+            border-radius: 8px;
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
+            width: 95vw;
+            max-width: 1200px;
+        }
+        #game-container {
+            border: 2px solid #000;
+            padding: 2px;
+            background-color: #000;
+            overflow: hidden;
+        }
+        #game-screen {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: calc(0.35vw + 3px);
+            line-height: 0.85;
+            letter-spacing: -0.2px;
+            white-space: pre;
+            color: #ccc;
+        }
+        #ui-container {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            box-sizing: border-box;
+        }
+        #menu-toggle {
+            font-size: 24px;
+            background: none;
+            border: none;
+            color: var(--text-muted-color);
+            cursor: pointer;
+            padding: 5px;
+        }
         #button-container { display: flex; gap: 10px; }
-        button { margin-top: 10px; padding: 10px 20px; font-size: 16px; cursor: pointer; background-color: #333; border: 1px solid #777; color: #fff; }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: var(--surface-color);
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+            border-radius: 6px;
+            transition: background-color 0.2s, color 0.2s;
+        }
+        button:hover {
+            background-color: var(--primary-color);
+            color: #000;
+        }
+        #info { margin-top: 10px; color: var(--text-muted-color); min-height: 20px; }
+
+        #menu-overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.6);
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s, visibility 0.3s;
+            z-index: 999;
+        }
+        #level-menu {
+            position: fixed;
+            top: 0; left: -320px;
+            width: 300px; height: 100%;
+            background-color: var(--surface-color);
+            box-shadow: 5px 0 15px rgba(0,0,0,0.2);
+            padding: 20px;
+            box-sizing: border-box;
+            transition: left 0.3s;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+        }
+        body.menu-active #menu-overlay { opacity: 1; visibility: visible; }
+        body.menu-active #level-menu { left: 0; }
+        
+        #level-menu h2 {
+            margin-top: 0;
+            border-bottom: 2px solid var(--primary-color);
+            padding-bottom: 10px;
+            color: var(--text-color);
+        }
+        #level-menu-header { display: flex; justify-content: space-between; align-items: center; }
+        #menu-close { font-size: 24px; cursor: pointer; background:none; border:none; color: var(--text-muted-color); }
+
+        .level-list {
+            list-style: none;
+            padding: 0;
+            margin: 10px 0;
+            overflow-y: auto;
+            flex-grow: 1;
+        }
+        .level-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 10px;
+            background-color: #333;
+            margin-bottom: 5px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .level-item:hover { background-color: var(--border-color); }
+        .level-item-actions button {
+            background: none;
+            border: none;
+            color: var(--text-muted-color);
+            padding: 2px 5px;
+            font-size: 14px;
+            cursor: pointer;
+            opacity: 0.7;
+        }
+        .level-item-actions button:hover { opacity: 1; color: var(--primary-color); }
+
+        #import-button { width: 100%; margin-top: auto; }
+        #file-input { display: none; }
+        
         .player { color: #FFFF00; font-weight: bold; } .solid { color: #FFFFFF; } .enemy { color: #FF3333; }
         .portal-ship { color: #ff80ed; } .portal-ball { color: #ff9900; } .portal-wave { color: #38bdf8; }
         .portal-robot { color: #aaaaaa; } .portal-cube { color: #4ade80; }
         .portal-grav-up { color: #f97316; } .portal-grav-down { color: #3b82f6; }
-        .orb-yellow { color: #facc15; } .orb-pink { color: #ec4899; } .orb-red { color: #dc2626; } .orb-blue { color: #38bdf8; }
-        .pad-yellow { color: #facc15; } .pad-pink { color: #ec4899; } .pad-red { color: #dc2626; } .pad-blue { color: #38bdf8; }
+        .orb-yellow { color: #facc15; } .pad-yellow { color: #facc15; }
+        .orb-pink { color: #ec4899; } .pad-pink { color: #ec4899; }
+        .orb-red { color: #dc2626; } .pad-red { color: #dc2626; }
+        .orb-blue { color: #38bdf8; } .pad-blue { color: #38bdf8; }
         .win { color: #84cc16; }
     </style>
 </head>
 <body>
-    <div id="game-container">
-        <pre id="game-screen"></pre>
+    <div id="game-wrapper">
+        <div id="ui-container">
+            <button id="menu-toggle">☰</button>
+            <div id="button-container">
+                <button id="start-button">Start</button>
+                <button id="reset-button" style="display: none;">Reset</button>
+            </div>
+        </div>
+        <div id="game-container">
+            <pre id="game-screen"></pre>
+        </div>
+        <div id="info">Tap Start to Play!</div>
     </div>
-    <div id="button-container">
-        <button id="start-button">Start</button>
-        <button id="reset-button" style="display: none;">Reset</button>
+
+    <div id="menu-overlay"></div>
+    <div id="level-menu">
+        <div id="level-menu-header">
+            <h2>Levels</h2>
+            <button id="menu-close">✕</button>
+        </div>
+        
+        <h3>Built-in Levels</h3>
+        <ul id="built-in-list" class="level-list"></ul>
+        
+        <h3>Custom Levels</h3>
+        <ul id="custom-level-list" class="level-list"></ul>
+        
+        <input type="file" id="file-input" accept=".txt">
+        <button id="import-button">Import Level (.txt)</button>
     </div>
-    <div id="info" style="margin-top: 5px; color: #aaa; min-height: 20px;"></div>
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
@@ -41,34 +204,69 @@ document.addEventListener('DOMContentLoaded', () => {
     const startButton = document.getElementById('start-button');
     const resetButton = document.getElementById('reset-button');
     const infoDisplay = document.getElementById('info');
+    const menuToggle = document.getElementById('menu-toggle');
+    const menuClose = document.getElementById('menu-close');
+    const menuOverlay = document.getElementById('menu-overlay');
+    const builtInList = document.getElementById('built-in-list');
+    const customLevelList = document.getElementById('custom-level-list');
+    const importButton = document.getElementById('import-button');
+    const fileInput = document.getElementById('file-input');
 
-    const levelText = `
-CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCF
-00000000000000000000000000000000000000000000000000000000000BB000BB0000000000BBBBBBBBBBBBBBBBBBBBBBBBBBssssssssssssssssssssF
-00000000000000000000000000000000000000000000000000000000000BBBBBBB0000000000BBBBBBBBBBBBBBBBBBBBBBBBBB00000000000000000000F
-00000000000000000000000000000000000000000000000000000000000BBBBBBB0000000000BBBBBBBBBBBBBBBBBBBBBBBBBB00000000000000000000F
-0000000000000000000000000000000000000000000000000000000000000000000000000000BBBBBBBBBBBBBBBBBBBBBBBBBB00000000000000000000F
-00000000000000000000000000000000000000000000000B0000000000000000000000000000BBBBBBBBBBBBBBBBBBBBBBBBBB00000000000000000000F
-00000000000000000000000000000000000000000000000s0000000000000000000000000(gr)000000s00000sBBBBBBBBBBBB00000000000000000000F
-0000000000000000000000000000000000000000000000000000y00000000000000000000(gr)0000000000000BBBB0000000s00000000000000000000F
-0000000000000000000000000000000000000000000000000S000000BBBBBBBBBB0000000(gr)000000000000000000000(gn)000000000000000000B0F
-000000000000000000000000000000000000000S0BBBBBBBBB000000000BBBBBBB0000BBBBBBB00000000000000000SS00(gn)000000S0000000BB00B0F
-00000000000000000000SS0000BBBBBBBBBBB00B0000000000000000000BB000BB0000BBBBBBB0000000000000000SBBS0(gn)000000BBBBBSSSBBSSB0F
-P000000000000SBBBBBBBBBBBBBBBBBBBBBBBSSSSSSSSSSSSSSSSSSSSSSBB000BBSSSSBB000BBSSSSSSSSSSSSSSSSBBBBBBBBBBBBBBBBBBBBBBBBBBBB0F
-GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGF
-`;
+    const BUILT_IN_LEVELS = [
+        {
+            name: "Level 1",
+            data: `
+CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
+0000000000000000000000000000000000000000000000000000000000BB000BB0000000000BBBBBBBBBBBBBBBBBBBBBBBBBBssssssssssssssssssssF
+0000000000000000000000000000000000000000000000000000000000BBBBBBB0000000000BBBBBBBBBBBBBBBBBBBBBBBBBB00000000000000000000F
+0000000000000000000000000000000000000000000000000000000000BBBBBBB0000000000BBBBBBBBBBBBBBBBBBBBBBBBBB00000000000000000000F
+000000000000000000000000000000000000000000000000000000000000000000000000000BBBBBBBBBBBBBBBBBBBBBBBBBB00000000000000000000F
+0000000000000000000000000000000000000000000000B0000000000000000000000000000BBBBBBBBBBBBBBBBBBBBBBBBBB00000000000000000000F
+0000000000000000000000000000000000000000000000s0000000000000000000000000(gr)000000s00000sBBBBBBBBBBBB00000000000000000000F
+000000000000000000000000000000000000000000000000000y00000000000000000000(gr)0000000000000BBBB0000000s00000000000000000000F
+000000000000000000000000000000000000000000000000S000000BBBBBBBBBB0000000(gr)000000000000000000000(gn)000000000000000000B0F
+00000000000000000000000000000000000000S0BBBBBBBBB000000000BBBBBBB0000BBBBBBB00000000000000000SS00(gn)000000S0000000BB00B0F
+00000000000000000000SS0000BBBBBBBBBBB0B0000000000000000000BB000BB0000BBBBBBB0000000000000000SBBS0(gn)000000BBBBBSSSBBSSB0F
+P000000000000SBBBBBBBBBBBBBBBBBBBBBBBSSSSSSSSSSSSSSSSSSSSSBB000BBSSSSBB000BBSSSSSSSSSSSSSSSSBBBBBBBBBBBBBBBBBBBBBBBBBBBB0F
+GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG
+`
+        },
+        {
+            name: "Level 2",
+            data: `
+CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
+sssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss000000sssssssssssF
+0000000000000000000000000000000000000000000000000000000000000000000(gn)000000000(gn)0000000000000000F
+00000000000000000000000BBBBBBBBBBBBBBBBBBBBBBBBBBBB0000000000000000(gn)0000000000(gn)000000000000000F
+000000000000000000000000000000ss000000ss000000000000000000000000000(gn)00000000000000000000000000000F
+0000000000000000000000000000000000000000000000000BBBBBBB000000000000000000000000(bg)0000000000000000F
+0000000000000000000000000000000000SS00000000S0000B00000BBBBBB000000000S0000000(Pj)000000000000000000F
+00000000000000000000000000000BBBBBBBBBBBBBBBB0000B00000B0000BBBBBBBBBBBBBBBBBBBBBB00000000000000R000F
+03000000000000000000000000000BBBBBBBBBBBBBBBB0000B00000B0000B00000000000000000000B00000BBBBBBBBBB000F
+03000000000000000000000000000BB000000000000BB0000B00000B0000B00000000000000000000B00000BBBBBBBBBB000F
+P3000000000000000000000000000BB000000000000BB0000B00000B0000B00000000000000000000B00000000BB000BB000F
+BBBBBBBBBBBB00000000000000000BB000000000000BB0000B00000B0000B00000000000000000000B00000000BB000BB000F
+BBBBBBBBBBBB00BBBBBBBB0000000BB000000000000BB0000B00000B0000B00000000000000000000B00000000BB000BB000F
+BB00000000BB00BBBBBBBB0000000BB000000000000BB0000B00000B0000B00000000000000000000B00000000BB000BB000F
+BB00000000BBSSBB0000BBSSSSSSSBB000000000000BBSSSSB00000B0000B00000000000000000000BSSSSSSSSBB000BB000F
+GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG
+`
+        }
+    ];
+    let customLevels = [];
 
     const SCREEN_WIDTH_CHARS = 240, SCREEN_HEIGHT_CHARS = 80;
     const GAME_UNITS_PER_BLOCK = 30;
     const CHARS_PER_BLOCK_V = 3, CHARS_PER_BLOCK_H = 6;
-    const V_SCALE_DIVISOR = 10.0, H_SCALE_DIVISOR = 4.58;
 
     const PHYSICS_TICK_RATE = 60;
     const PHYSICS_DELTA_TIME = 1 / PHYSICS_TICK_RATE;
     const PHYSICS = {
         cube: {
-            gravity: 2955 / V_SCALE_DIVISOR, hSpeed: 258.0 / H_SCALE_DIVISOR,
-            jumpVelocity: -724.5 / V_SCALE_DIVISOR,
+            gravity: 2955 / 10.0, hSpeed: 258.0 / 4.58,
+            jumpVelocity: -724.5 / 10.0,
+            jumpVelocityPink: -724.5 * 0.7 / 10.0,
+            jumpVelocityRed: -724.5 * 1.2 / 10.0,
         },
         ship: {
             gravity: 2955 / 15.0, thrust: -4432.5 / 15.0,
@@ -76,14 +274,14 @@ GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG
             maxUpwardVel: -25.0, maxDownwardVel: 25.0,
         },
         ball: {
-            gravity: 2955 / V_SCALE_DIVISOR, hSpeed: 258.0 / H_SCALE_DIVISOR,
+            gravity: 2955 / 10.0, hSpeed: 258.0 / 4.58,
         },
         wave: {
-            hSpeed: 258.0 / H_SCALE_DIVISOR,
+            hSpeed: 258.0 / 4.58,
         },
         robot: {
-            gravity: 2955 / V_SCALE_DIVISOR, hSpeed: 258.0 / H_SCALE_DIVISOR,
-            jumpVelocity: -724.5 / V_SCALE_DIVISOR,
+            gravity: 2955 / 10.0, hSpeed: 258.0 / 4.58,
+            jumpVelocity: -724.5 / 10.0,
         }
     };
 
@@ -108,7 +306,7 @@ GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG
         '(gn)': { type: 'portal_grav_down' }, '(gr)': { type: 'portal_grav_up' },
     };
 
-    let player, camera, gameRunning, inputState = { holding: false, pressedThisFrame: false }, timeAccumulator, screenBuffer, isGameOver, levelObjects, domGrid, lastScreenBuffer;
+    let player, camera, gameRunning, inputState = { holding: false, pressedThisFrame: false }, timeAccumulator, screenBuffer, isGameOver, levelObjects, domGrid, lastScreenBuffer, activeLevel = {type: 'built-in', index: 0};
     
     function initializeDomGrid() {
         const fragment = document.createDocumentFragment();
@@ -144,8 +342,14 @@ GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG
         return { objects: parsedObjects, playerStart };
     }
 
-    function resetGame() {
-        const parsedLevel = parseLevel(levelText); levelObjects = [];
+    function resetGame(levelType = activeLevel.type, levelIndex = activeLevel.index) {
+        activeLevel = { type: levelType, index: levelIndex };
+        const levelSource = levelType === 'custom' ? customLevels : BUILT_IN_LEVELS;
+        const level = levelSource[levelIndex];
+        if (!level) { return; }
+
+        const parsedLevel = parseLevel(level.data);
+        levelObjects = [];
         for(const obj of parsedLevel.objects) {
             levelObjects.push({ ...obj, px: obj.x * CHARS_PER_BLOCK_H, py: obj.y * CHARS_PER_BLOCK_V, pw: (obj.width || 1) * CHARS_PER_BLOCK_H, ph: (obj.height || 1) * CHARS_PER_BLOCK_V });
         }
@@ -210,8 +414,25 @@ GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG
                         if(player.gamemode === 'wave') player.vy = -player.vx;
                     }
                 }
-                else if (type.startsWith('pad_') && player.vy * Math.sign(player.gravity) >= 0) { player.vy = PHYSICS[player.gamemode].jumpVelocity * Math.sign(player.gravity); }
-                else if (type.startsWith('orb_') && inputState.pressedThisFrame) { player.vy = PHYSICS[player.gamemode].jumpVelocity * Math.sign(player.gravity); inputState.pressedThisFrame = false; }
+                else if (type.startsWith('pad_') && player.vy * Math.sign(player.gravity) >= 0) {
+                    if (type === 'pad_blue') { player.gravity *= -1; player.vy *= -1; }
+                    else {
+                        let jumpV = PHYSICS.cube.jumpVelocity;
+                        if (type === 'pad_pink') jumpV = PHYSICS.cube.jumpVelocityPink;
+                        if (type === 'pad_red') jumpV = PHYSICS.cube.jumpVelocityRed;
+                        player.vy = jumpV * Math.sign(player.gravity);
+                    }
+                }
+                else if (type.startsWith('orb_') && inputState.pressedThisFrame) {
+                    if (type === 'orb_blue') { player.gravity *= -1; player.vy *= -1; }
+                    else {
+                        let jumpV = PHYSICS.cube.jumpVelocity;
+                        if (type === 'orb_pink') jumpV = PHYSICS.cube.jumpVelocityPink;
+                        if (type === 'orb_red') jumpV = PHYSICS.cube.jumpVelocityRed;
+                        player.vy = jumpV * Math.sign(player.gravity);
+                    }
+                    inputState.pressedThisFrame = false;
+                }
                 else if (type === 'win') return endLevel("You Win!", true);
             }
         }
@@ -219,7 +440,8 @@ GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG
 
     function updatePhysics() {
         if (!gameRunning) return;
-        player.w = SHAPES.player[player.gamemode][0]?.length || 1; player.h = SHAPES.player[player.gamemode].length || 1;
+        player.w = SHAPES.player[player.gamemode][0]?.length || 1;
+        player.h = SHAPES.player[player.gamemode].length || 1;
         const modePhysics = PHYSICS[player.gamemode]; const gravSign = Math.sign(player.gravity);
         switch(player.gamemode) {
             case 'cube': if (player.onGround && inputState.pressedThisFrame) player.vy = modePhysics.jumpVelocity * gravSign; break;
@@ -298,8 +520,14 @@ GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG
              if(obj.type === 'block_solid') { shape = SHAPES.block.solid; }
              else if(obj.type === 'spike_up') { shape = SHAPES.spike_up; }
              else if(obj.type === 'spike_down') { shape = SHAPES.spike_down; }
-             else if(obj.type.startsWith('pad_')) { shape = SHAPES.pad_yellow; }
-             else if(obj.type.startsWith('orb_')) { shape = SHAPES.orb_yellow; }
+             else if (obj.type.startsWith('pad_')) {
+                const color = obj.type.split('_')[1];
+                shape = SHAPES[`pad_${color}`] || SHAPES.pad_yellow;
+             }
+             else if (obj.type.startsWith('orb_')) {
+                const color = obj.type.split('_')[1];
+                shape = SHAPES[`orb_${color}`] || SHAPES.orb_yellow;
+             }
              else if(obj.type.startsWith('portal')) { shape = SHAPES.portal; }
              else if(obj.type === 'win') { shape = SHAPES.win; }
              if(shape) drawShape(screenX, screenY, shape, className);
@@ -309,6 +537,7 @@ GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG
         else { playerShape = SHAPES.player[player.gamemode]; if (player.angle !== 0) playerShape = rotateShape(playerShape, player.angle); }
         player.w = playerShape[0]?.length || 1; player.h = playerShape.length || 1;
         drawShape(player.x - camera.x, player.y, playerShape, 'player');
+        
         for (let y = 0; y < SCREEN_HEIGHT_CHARS; y++) {
             for (let x = 0; x < SCREEN_WIDTH_CHARS; x++) {
                 const current = screenBuffer[y][x];
@@ -324,6 +553,7 @@ GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG
     function endLevel(message, isWin) {
         if (isGameOver || player.isDead) return;
         gameRunning = false;
+        
         if (isWin) {
             isGameOver = true;
             infoDisplay.textContent = message;
@@ -334,7 +564,7 @@ GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG
             infoDisplay.style.color = '#FF3333';
             render();
             setTimeout(() => {
-                resetGame();
+                resetGame(activeLevel.type, activeLevel.index);
                 render();
             }, 750);
         }
@@ -355,10 +585,109 @@ GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG
             infoDisplay.style.color = '#aaa';
         }
     }
+
+    function populateLevelMenu() {
+        builtInList.innerHTML = '';
+        customLevelList.innerHTML = '';
+        BUILT_IN_LEVELS.forEach((level, index) => {
+            const li = document.createElement('li');
+            li.className = 'level-item';
+            li.textContent = level.name;
+            li.dataset.type = 'built-in';
+            li.dataset.index = index;
+            li.addEventListener('click', () => {
+                resetGame('built-in', index);
+                startGame();
+                closeMenu();
+            });
+            builtInList.appendChild(li);
+        });
+        customLevels.forEach((level, index) => {
+            const li = document.createElement('li');
+            li.className = 'level-item';
+            const nameSpan = document.createElement('span');
+            nameSpan.textContent = level.name;
+            li.appendChild(nameSpan);
+            const actionsDiv = document.createElement('div');
+            actionsDiv.className = 'level-item-actions';
+            const exportBtn = document.createElement('button');
+            exportBtn.textContent = '📥';
+            exportBtn.title = 'Export Level';
+            exportBtn.addEventListener('click', (e) => { e.stopPropagation(); exportLevel(index); });
+            actionsDiv.appendChild(exportBtn);
+            const deleteBtn = document.createElement('button');
+            deleteBtn.textContent = '🗑️';
+            deleteBtn.title = 'Delete Level';
+            deleteBtn.addEventListener('click', (e) => { e.stopPropagation(); deleteLevel(index); });
+            actionsDiv.appendChild(deleteBtn);
+            li.appendChild(actionsDiv);
+            li.dataset.type = 'custom';
+            li.dataset.index = index;
+            li.addEventListener('click', () => {
+                resetGame('custom', index);
+                startGame();
+                closeMenu();
+            });
+            customLevelList.appendChild(li);
+        });
+    }
+
+    function openMenu() { document.body.classList.add('menu-active'); }
+    function closeMenu() { document.body.classList.remove('menu-active'); }
+
+    menuToggle.addEventListener('click', openMenu);
+    menuClose.addEventListener('click', closeMenu);
+    menuOverlay.addEventListener('click', closeMenu);
+    window.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeMenu(); });
+    
+    importButton.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', (event) => {
+        const file = event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const levelData = e.target.result;
+            const levelName = prompt("Enter a name for the new level:", file.name.replace('.txt', '')) || "Custom Level";
+            customLevels.push({ name: levelName, data: levelData });
+            saveCustomLevels();
+            populateLevelMenu();
+        };
+        reader.readAsText(file);
+        fileInput.value = '';
+    });
+
+    function saveCustomLevels() {
+        localStorage.setItem('asciiGDCustomLevels', JSON.stringify(customLevels));
+    }
+    function loadCustomLevels() {
+        const saved = localStorage.getItem('asciiGDCustomLevels');
+        if (saved) { customLevels = JSON.parse(saved); }
+    }
+    function deleteLevel(index) {
+        if (confirm(`Are you sure you want to delete "${customLevels[index].name}"?`)) {
+            customLevels.splice(index, 1);
+            saveCustomLevels();
+            populateLevelMenu();
+        }
+    }
+    function exportLevel(index) {
+        const level = customLevels[index];
+        const blob = new Blob([level.data.trim()], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${level.name.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.txt`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
+
     initializeDomGrid();
+    loadCustomLevels();
+    populateLevelMenu();
     resetGame();
     render();
-    infoDisplay.textContent = "Tap Start to Play!";
 });
 </script>
 </body>
