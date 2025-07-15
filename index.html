@@ -12,6 +12,7 @@
             --text-color: #e5e7eb;
             --text-muted-color: #9ca3af;
             --border-color: #4b5563;
+            --editor-toolbar-width: 280px;
         }
         html, body {
             background-color: var(--bg-color);
@@ -38,122 +39,86 @@
             box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
             width: 95vw;
             max-width: 1200px;
+            display: flex;
+            flex-direction: column;
+            height: 90vh;
+            max-height: 800px;
         }
         #game-container {
             border: 2px solid #000;
-            padding: 2px;
+            padding: 0;
             background-color: #000;
             overflow: hidden;
-        }
-        #game-screen {
-            font-family: 'Courier New', Courier, monospace;
-            font-size: calc(0.35vw + 3px);
-            line-height: 0.85;
-            letter-spacing: -0.2px;
-            white-space: pre;
-            color: #ccc;
-        }
-        #ui-container {
             width: 100%;
+            position: relative;
+            flex-grow: 1;
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            padding: 10px 0;
-            box-sizing: border-box;
+            justify-content: center;
         }
-        #menu-toggle {
-            font-size: 24px;
-            background: none;
-            border: none;
-            color: var(--text-muted-color);
-            cursor: pointer;
-            padding: 5px;
-        }
+        #game-screen { font-family: 'Courier New', Courier, monospace; color: #ccc; line-height: 1.0; }
+        #game-screen.pre-render { white-space: pre; }
+        #game-screen.grid-render span { position: absolute; display: inline-block; text-align: center; }
+        #ui-container { width: 100%; display: flex; justify-content: space-between; align-items: center; padding: 10px 0; box-sizing: border-box; flex-shrink: 0; }
+        #menu-toggle { font-size: 24px; background: none; border: none; color: var(--text-muted-color); cursor: pointer; padding: 5px; }
         #button-container { display: flex; gap: 10px; }
-        button {
-            padding: 10px 20px;
-            font-size: 16px;
-            cursor: pointer;
-            background-color: var(--surface-color);
-            border: 1px solid var(--border-color);
-            color: var(--text-color);
-            border-radius: 6px;
-            transition: background-color 0.2s, color 0.2s;
-        }
-        button:hover {
-            background-color: var(--primary-color);
-            color: #000;
-        }
-        #info { margin-top: 10px; color: var(--text-muted-color); min-height: 20px; }
-
-        #menu-overlay {
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            background-color: rgba(0,0,0,0.6);
-            opacity: 0;
-            visibility: hidden;
-            transition: opacity 0.3s, visibility 0.3s;
-            z-index: 999;
-        }
-        #level-menu {
-            position: fixed;
-            top: 0; left: -320px;
-            width: 300px; height: 100%;
-            background-color: var(--surface-color);
-            box-shadow: 5px 0 15px rgba(0,0,0,0.2);
-            padding: 20px;
-            box-sizing: border-box;
-            transition: left 0.3s;
-            z-index: 1000;
-            display: flex;
-            flex-direction: column;
-        }
+        button { padding: 10px 20px; font-size: 16px; cursor: pointer; background-color: var(--surface-color); border: 1px solid var(--border-color); color: var(--text-color); border-radius: 6px; transition: background-color 0.2s, color 0.2s, right 0.3s; }
+        button:hover { background-color: var(--primary-color); color: #000; }
+        button:disabled { opacity: 0.5; cursor: not-allowed; background-color: var(--surface-color) !important; color: var(--text-muted-color) !important; }
+        #info { margin-top: 10px; color: var(--text-muted-color); min-height: 20px; flex-shrink: 0; }
+        #menu-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); opacity: 0; visibility: hidden; transition: opacity 0.3s, visibility 0.3s; z-index: 999; }
+        #level-menu { position: fixed; top: 0; left: -320px; width: 300px; height: 100%; background-color: var(--surface-color); box-shadow: 5px 0 15px rgba(0,0,0,0.2); padding: 20px; box-sizing: border-box; transition: left 0.3s; z-index: 1000; display: flex; flex-direction: column; }
         body.menu-active #menu-overlay { opacity: 1; visibility: visible; }
         body.menu-active #level-menu { left: 0; }
-        
-        #level-menu h2 {
-            margin-top: 0;
-            border-bottom: 2px solid var(--primary-color);
-            padding-bottom: 10px;
-            color: var(--text-color);
-        }
-        #level-menu-header { display: flex; justify-content: space-between; align-items: center; }
-        #menu-close { font-size: 24px; cursor: pointer; background:none; border:none; color: var(--text-muted-color); }
-
-        .level-list {
-            list-style: none;
-            padding: 0;
-            margin: 10px 0;
-            overflow-y: auto;
-            flex-grow: 1;
-        }
-        .level-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px 10px;
-            background-color: #333;
-            margin-bottom: 5px;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
+        #level-menu-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--primary-color); padding-bottom: 10px; }
+        #level-menu-header h2 { margin: 0; color: var(--text-color); }
+        #level-menu-header-actions { display: flex; align-items: center; gap: 5px; }
+        #level-menu-header-actions button { padding: 5px 10px; font-size: 14px; }
+        #menu-close { font-size: 24px; cursor: pointer; background:none; border:none; color: var(--text-muted-color); padding:5px; }
+        .menu-tabs { display: flex; border-bottom: 1px solid var(--border-color); margin: 15px 0 10px; }
+        .menu-tabs button { flex: 1; background: none; border: none; padding: 10px; border-radius: 0; border-bottom: 3px solid transparent; color: var(--text-muted-color); }
+        .menu-tabs button.active { color: var(--primary-color); border-bottom-color: var(--primary-color); }
+        .level-list { list-style: none; padding: 0; margin: 0; overflow-y: auto; flex-grow: 1; display: none; }
+        .level-list.active { display: block; }
+        .level-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 10px; background-color: #333; margin-bottom: 5px; border-radius: 4px; cursor: pointer; transition: background-color 0.2s; }
         .level-item:hover { background-color: var(--border-color); }
-        .level-item-actions button {
-            background: none;
-            border: none;
-            color: var(--text-muted-color);
-            padding: 2px 5px;
-            font-size: 14px;
-            cursor: pointer;
-            opacity: 0.7;
-        }
+        .level-item-actions button { background: none; border: none; color: var(--text-muted-color); padding: 2px 5px; font-size: 14px; cursor: pointer; opacity: 0.7; }
         .level-item-actions button:hover { opacity: 1; color: var(--primary-color); }
-
         #import-button { width: 100%; margin-top: auto; }
         #file-input { display: none; }
-        
+        #rotate-prompt { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: var(--bg-color); color: var(--text-color); display: none; align-items: center; justify-content: center; font-size: 18px; z-index: 2000; text-align: center; }
+        #rotate-prompt div { max-width: 80%; }
+        #editor-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: var(--bg-color); z-index: 1500; display: none; flex-direction: column; }
+        #editor-header { padding: 5px 10px; background-color: var(--surface-color); display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+        #editor-header input { background-color: var(--bg-color); border: 1px solid var(--border-color); color: var(--text-color); padding: 5px; border-radius: 4px; flex-grow: 1; }
+        #editor-header button { padding: 5px 10px; font-size: 14px; }
+        #editor-grid-container { flex-grow: 1; overflow: auto; position: relative; background-image: linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px); cursor: grab; }
+        #editor-grid { position: relative; }
+        .editor-cell { position: absolute; display: flex; justify-content: center; align-items: center; box-sizing: border-box; border: 1px solid #333; color: #fff; cursor: pointer; }
+        .editor-cell:hover { background-color: rgba(255,255,255,0.1); }
+        #editor-footer { padding: 5px; background-color: var(--surface-color); display: flex; justify-content: center; gap: 10px; flex-shrink: 0; }
+        #editor-footer button { font-size: 14px; padding: 5px 10px; }
+        #editor-toolbar { background-color: var(--surface-color); padding: 5px; display: none; gap: 10px; flex-shrink: 0; align-items: center; }
+        #editor-toolbar .tool-section { display: flex; gap: 5px; }
+        #editor-toolbar .tool-section button { padding: 5px; min-width: 40px; }
+        #editor-toolbar .tool-section button.active { background-color: var(--primary-color); color: #000; }
+        #editor-toolbar .tab-content { display: none; }
+        #editor-toolbar .tab-content.active { display: flex; gap: 5px; overflow-x: auto; padding-bottom: 5px; }
+        #editor-side-toolbar { position: fixed; top:0; right: calc(-1 * var(--editor-toolbar-width)); width: var(--editor-toolbar-width); height: 100vh; background-color: var(--surface-color); box-shadow: -5px 0 15px rgba(0,0,0,0.2); transition: right 0.3s; padding: 10px; box-sizing: border-box; display: flex; flex-direction: column; gap: 10px; }
+        #editor-side-toolbar .tool-section { display: flex; flex-direction: column; gap: 5px; }
+        #editor-side-toolbar .tool-section button { width: 100%; text-align: left; padding: 10px;}
+        #editor-side-toolbar .tab-content { display: none; flex-wrap: wrap; gap: 5px; }
+        #editor-side-toolbar .tab-content.active { display: flex; }
+        #editor-toolbar-toggle { position: fixed; top: 50%; right: 0; transform: translateY(-50%); z-index: 1501; writing-mode: vertical-rl; text-orientation: mixed; padding: 10px 5px; border-top-right-radius: 0; border-bottom-right-radius: 0; }
+        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.7); display: none; justify-content: center; align-items: center; z-index: 3000; }
+        .modal-content { background: var(--surface-color); padding: 20px; border-radius: 8px; border: 2px solid var(--border-color); text-align: center; }
+        .modal-content h3 { margin-top: 0; }
+        .modal-content input { width: 80px; text-align: center; margin: 10px; }
+        #editor-notification { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); color: white; padding: 10px 20px; border-radius: 6px; z-index: 4000; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
+        #editor-overlay.toolbar-open #editor-side-toolbar { right: 0; }
+        #editor-overlay.toolbar-open #editor-toolbar-toggle { right: var(--editor-toolbar-width); }
+        @media (hover: none) and (orientation: portrait) { #rotate-prompt { display: flex; } #game-wrapper, #menu-overlay, #level-menu, #editor-overlay { display: none; } }
+        @media (min-width: 1025px) { #editor-toolbar { display: flex; } #editor-side-toolbar, #editor-toolbar-toggle, #editor-footer { display: none; } }
         .player { color: #FFFF00; font-weight: bold; } .solid { color: #FFFFFF; } .enemy { color: #FF3333; }
         .portal-ship { color: #ff80ed; } .portal-ball { color: #ff9900; } .portal-wave { color: #38bdf8; }
         .portal-robot { color: #aaaaaa; } .portal-cube { color: #4ade80; }
@@ -166,41 +131,18 @@
     </style>
 </head>
 <body>
-    <div id="game-wrapper">
-        <div id="ui-container">
-            <button id="menu-toggle">☰</button>
-            <div id="button-container">
-                <button id="start-button">Start</button>
-                <button id="reset-button" style="display: none;">Reset</button>
-            </div>
-        </div>
-        <div id="game-container">
-            <pre id="game-screen"></pre>
-        </div>
-        <div id="info">Tap Start to Play!</div>
-    </div>
-
+    <div id="rotate-prompt"><div>↺<br/><br/>Please rotate your device to landscape mode to play.</div></div>
+    <div id="game-wrapper"><div id="ui-container"><button id="menu-toggle">☰</button><div id="button-container"><button id="start-button">Start</button><button id="reset-button" style="display: none;">Reset</button></div></div><div id="game-container"><div id="game-screen"></div></div><div id="info">Tap Start to Play!</div></div>
     <div id="menu-overlay"></div>
-    <div id="level-menu">
-        <div id="level-menu-header">
-            <h2>Levels</h2>
-            <button id="menu-close">✕</button>
-        </div>
-        
-        <h3>Built-in Levels</h3>
-        <ul id="built-in-list" class="level-list"></ul>
-        
-        <h3>Custom Levels</h3>
-        <ul id="custom-level-list" class="level-list"></ul>
-        
-        <input type="file" id="file-input" accept=".txt">
-        <button id="import-button">Import Level (.txt)</button>
-    </div>
-
+    <div id="level-menu"><div id="level-menu-header"><h2>Levels</h2><div id="level-menu-header-actions"><button id="new-level-button"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAYAAADDPmHLAAAACXBIWXMAADXUAAA11AFeZeUIAAAUHklEQVR4Ae2dB5QV1RnHl77KAi4Ge40FFWI9lgRbNJYoiooYNSqoMRps8agxxrYWIooRez0K9h57iSj2GhULWNFdUbGvCKuULeT3f9nR997OzJu5c6c89n3n/M7M3Ln9fvfe7947b7fLwoULq7IubW1tVV27di3IZlNTU1VNTU2BW9AHt/iChk3Ln9qpS5cu1pMvrFXr0VcizHoNVBQg6y0Uc/4qChBzBWc9+ooCZL2FYs5fRQFiruCsR19RgKy3UMz5qyhAzBWc9egrCpD1Foo5f51NAbSTYn83JeZGijP6LuW6ExiyUvrgfzRsCGwEtn3CzuIb3L8ADXKDTEtcO4HdM11qO5mrpfJuZht1B6LL9X4a39n/bsbtbbgX7oGp0AKdRjrDFFBN439Di87Na1VnKuiJ2/pwKjwHk2EU1EKnkM4yBXSjNTdlJKhDGbbmvodP62o6mA5XwA0g5Uld4poCylYBDE8D1eOHQx2sAX4GoaaJD2Ac3AT5IwiPi4Z0hikgv6UW8HALDIHxMB+8RMqxJlwJj8LGsMhJZ1MApwE1rB8LW4NWA45RyG0HUR1tDk/D6dAbFhnprArgNOCL3GwNF0GpIb4aPyczFz/IdW1YJKSzK4AacRZoNNgPPgY/6YoRuSUeHoGdwc+G8IsnM+8qCvD/pmjl8m/YHp4AvylBjb4SyJY4FMq6Dss681S+bXmfCHcFGX5SCj/R7uLFILtAq4uylIoCdGy2JpwOh2Pgh46vC1y0k3oSXA6LFbwpk4eKArg3lDaDLm5tbd2X65fuXn5y1ZQwCi6DxaGspKIA/s11H693h4/8veXsgAPwcymUlRJUFKBEy/L6BdiF5d87XP2MQ9WlowRlMx0kfRq4FJV0DsjA0mZMA7wH2nv/CrRT51fJvE5F3mb5p2XfvTAYvJZ/UoKRHDcv5MRRx8/zINOSqAJQMQdSMSOpkeIKVEXNgJfhCZgEn0CWpJ7MDAUdG2/gk7EulHEUZdWvmWRMltpg8okq/ldJHgapd0yGLaFYAZySOr1flabjWZ3G3U9lzqIyHT+5q+FhUEEcpR4wAqu6detW7G0zHB6D3sUvip5VlutASvBj0bvMPBbWarzZaiP6PeAfzKefcXUaOz9VKYaQIbUdTIBX4HjoD4mKS+MrfeXn9QAZUTkcm0DlyaQkqQCqgEYYy3yq07gLQNuwfqLutxq9fyzXZ2AYJDptkV6xtODQUOzo8az6dZQgk4Zh0grg1NPH3Gj/XdPBXaBjWbcRAeecKJ/rwG3wL+gLaYl6dr8QiecrgQ6UMiVpKYAqQQ3+FuwFWma91O7GxVN68eZIuB0GePqK98WyRL9RyCRUz6NA+wSZUoI0FYC6yIlsg0ntp2wjudd+vJ+oB+7A3wa4k+sSfh5jercP8S5jELfyfSAG7RVcM2MTZEEBnLps5uYGkJV9KnwFftPCFry/BGQnJCkyYLVfYSJaIu5PQI0EpVYRJvGHDpPkMjBs5rTWngx+vVwbSqPgRkhKZIRqVVIHpqeAGvWuh9SXiFlWAM33b4K+y/OTD3m5CWiFkZRICY6DM6CHYaLMBm03MCIcRvh5hnFEDpalKaC4MJoSvi92dHleDTed2iUpWgqOA01VGoVMhLbvegABUzUMs6wAmv81VAYRVWTS1rUafiycAlJWE8kZhgRM7XuCVKeAadOm+VVaz0GDBk3Bg9b/pURbx5uClpVJi/YEnoNBERKWoqdiE2guS0VeffXVqo028l1O15KxAQEzp94vOyARBWhsbKzq3z+3M11DmhNgbYgiGok1ikkSNQxtTgFajoXaodNhi4+oR/mtAPKDaihdL98hgXuV9VrYDWzUY04JMAwvI77Eto1tZJz8Ygm1tqoinodRIAs+sMyfr53gDrI7LmEs7BU7xBCfgxr/atgTpHy2JGcYogSJGYa2FKCWk7Mx1IJ6rXrFZNgGTONfgbB7QxjRXGyzMbzSrmH4v4aXI2JKz/meIJGRwLSBiitHRtisdkc1wm/gEdDhza8gjChPZ8GSYQLhV/ZM3AqwGL1TjT885rRySkAaUoJYt41tKYA2MsZB/nJIw7cq6mnQCd5yUErUgNoY+SOEbcxSJ4ql0i71XnV1DmO07WHfK12V/wAU7nyuttqpQ1o2VwEPEruG/h3yUlEhZMgdA6q4c+F6mAPFom1VNf7ZYJKvHwjnd3bA60KZOXNmoYPH03LL5XT3IF4rf7E1hkvysgkG4h6qXC7xeDrZLIxGgZNhtktqUoSV4CJ4HHYGx8DTuzXQ9IlczwPTIU/xx2U9r0vcUl4nz9yGEjWgaSNqqWnSIQJl0KYCKMFXQY3oJUpvY7ibPYA7uMrSv6pXr14vo+k6ZjWtYILmbI3DUCTd2xQp5IVQGyHSBsJK+VsN4pDy7c/3EgZBAwRRxJbpRXyPQhskLfNZjh5LorkdTq42ynYk8UQpy3uEX6s9LydyXQBhpRnFnkSgy2A0LAY2ysa4ZCmionhW5PldSFyoqAUowfEk3BWilm954miIUIh3CDsoLx/duP87zAdTaSXgBOgNUcsXmwIoYxtClMojuLGogk+A7mBaSWqsK8Go96OI6gCDXdJXnjQS2FCCxV3iD1XeUJ4NEtuEMNPBqBIJF0VUwadADzAp5wjCzYWworK+D+uAV7pSAo0EJtMBwXLCQNc6kbtq8EqnpHtJD1Eibw87kN7wEvdpKEEz6Z4JYUeCVQnzKYQVlXEarAml6jZ/OlA+TepHYa4BYyUolUlb7/ugrReQ0XmQtLSQ4DhQhQcpjwysJyFsg8j/w7AsBEnH8bMa/gfCwfAFhJU26nYCgYwMQycTSVxlmW8Bj0OUoY/goaWFSrqIUD3Br6zd8XchfsI2fhNhzoCoc/Jw4miFsKIwEyB0+n6VEde7Xs3NzduR2dvgSzApMMFCi9K5GLx6Shca/zDeh1FOZre2VyjPbwlnY9UxgHi+BRMxUoLcejnAdoFVLy0tLVXdu3fXptCy8GsYAoNheegD2vlqBu3vDwAdv2rHMKpoI+ZqOBZ+LIpsJ55vBp0qlhLtymgf+QK4ivLMpjylwgR535eWn8pvJFYM4tnFj3bBJsIhEGxHjATj6ume8dJjvN5piO4DS7RfZdysBQ9C2GGZIK7i1lM2xudMV98dHWVT3A2au3Pl8CmPVzm93NUhjwEZhSaiOvoYAk8FXhmJ1d2gwtQzHgJbSqB4bmmvKClYPQSR2UwTR0+dOrXAljAoj1/9Sgm0T2CiBF8Qbgj4xV/wzsq4xXATt+iASR+I3Am/g6jTgcL/AZaEVWFl8BMN+e/T0CP58OUlP48W3imtsaDr6aBT0iCiKWkEPB/Es+PH9mGQE28cVymBvv+fDKqcqCIl2A5WB917iebSh2AbiLvxnTyofPq+4jSQHVRKPsODFDpU4yvSclIA5fcb2A+eBhtKQDS+IkP0UtDoox6WpMhg1clqHSwAV2G4/5wXavxnXT2UcCw3BVBxvoB9KfgLXONUAuf7Bq0YmiANcX6BpJFAypgvKvtXrBiGc30u/0WY+3JUAJVvJgXXfDclTGFD+J2HsXc4/jUMF1d8iGiseNVIoI9RpAS6d+Rrlp978KCOYCzlqgAqsIbkofAm2BwJFrK5cxxxXms5XqIzFtkhZ4O+uNLqQMO+PsM37vmEzUk5K4AKoIoYBm/pwZbwddIorP2ViuPr0aOH/vRbsXOSzxqRRjD67cg1Us93Mp3mTqCTh8hXflgykM/K7iKiQZEj+zkCfd4m4+rDn52ydde+oxopU6mqc6ScFwZ+j0c11ruFzpGeNiK0lGpgpFgyHjjTCvD9998XVB9zc+55wQLXVdE0Xu7N/PhtQaBoD+sR/G5YK1o02Q2daQUIUm1SivZ5uT/+j2R+1O8QbMraRKaNoME2I81KXGWvAO0VuRnXyXAQ6FfKtmUVIpQSbGg74rTjK3cF6E4FjsY6f5Crhmu/Ld0oda14VwRNBzq+XmQkFQXQ2Xnx/G5Qo0sS5gqGf/1oQ8N/EqKl4R2wVRKJJZFGrApgoZG96kDzsXq9hnyNAknK8iR2G2ybZKJxpRWrAsSU6WE9e/acRNybQlxDfqmsL81qQyOBNmTKWspJAWTc/Q1ugWVMa52GMw1aEK59tSEl2KXgRZk9lIsC6Aea45nvx3BdzLSOafw3abhZpuGLwmn0qYEbYS9IazQiaXMpBwXQuv5qOByizPef0vg6QPkzFO4w4RBB9MGq8qfvFGJTgtmzZ0fIonfQKBXqHau9N7X02mtpuGFEGaVy9VXNEVAPDdADrgT1YBsiJbgMVJ8Twc48Q0RxS5ZHgL7IdRYaX/vHF8O97ZWpxpEdMRr00YctkTJdChphYpE5c+ZYjzerCqAedSuNP5RrlJ6vCtMO4Wm6yRMpwQ2gxtLoYEtkn0jZjoKs1m1BWbM4BfQjhzeBllhRG7+eOP4CP4Kb3IhjbxgP1W4eDNw0vZwHW8OT0BOk0KrrudAIM2A6NIDcjMTGj1GypgC11MRE0K90oja+vuOT4aiK9hKNBFeBGmksGK8wCJsvUoLd28l3d+41LUkpPwHtadwK+v7A9ZgT95xoCWvdGFSkcTFr1izPuF3e1XKydw95sfHjD/16J8yfitHv+uQ/jV8vk+zCuZRdvyzeAmz8xtCz3om/4F1W5ql+ZGwic/6uqHrUnq9v+jS/XwTq4UFEPfICqIMWSFqqKbumvP+Apg9NS4lIFhRA8+NNVIB21CI3PnE8xYbREVybIYw4X9/WESj/69swcUT1qynor/AwLB81siDh01YANb7mPxtzvsr7JmhD5gc9GIhGgrNhDKQxEijL6gSbwwOwCsQqaSqANnlkhWvoi9rzVUnvwT7wmR4iiJTgTDgf0lSC9UhfU9kvIDZJSwFq2eSZYGmdr8rRl7tq/Hf0YEHU8KeA1vRpKsEQ0j8HYlutxRYxmfYS7e2r8W0YfEqjAfaE18GmaEl2IgZlD2wK7Rqm0Vk0Mu4Hk1j+aaq0LkkXSr/z17Bmq/E/JS4Zj7Yb36no+TT+cTxcDUFXFE5YW1ftUfwTYvnqKUkFyBl89PydKYyNOV+7fDIep0KcMp/Ij2YkmMg1LSVYhSlTXzxX2SYpBdCwfxPYMvg05w+HtyAJ0UhwJAnZ/OFJmHyrw2hL27pBmIQNoO3dCWCr56vx9QHGFEhStLR8Cta2lKhGE9Hafu3GVR3Sa3Rcuk+fPjJ0ZZhak7gVQEs9mwZfPSUfAUk3vlPh2uOPIlpifgPPwHP8BH06P0Jt5F7uNTyvwPOh3G8KbrI/jrJHrB1jx6kAffv163cdmR0KXlrNq8Aig28YJDXsu2VMdoyJqKd/DmNB1vzX4CWyaZ4FGX/Fsj4Og+GV4hemz3HZADmDj0zZavwG4vo9pNn4JG+0FFTvvr2pqUmNp+Hbr/F5XfVfUMeR0hSLRiB1AmsShwL0I3c3g02DT0ercVv7QSo17Baz5vfxMBJKNXwVw7+TBy37vnUeiq7b8Ow2OhR5C/ZoWwFk8F0Ptvb2HYMv8jqfZVyVBb4IVq05X+rBWvmcDFpKhpEGPOs0U6NHscgIXbbY0fTZpgLkDD4yYuNUT+X5CGTwvaaHqMIyLvcr4ojXevLhNjS7Ze8DHE8AU4NNH5kqjmLRCCs7wIrYUgCr5/mUbAbsAVOslNJeJJqGmgNEtxCLfgz+wowYxdFqChgLmkbyRW22Qb5DlHsbCiCDz9Z5vsryCewMb+ghY/I2+fkuQJ7eZz6/M99fTU1N/mPQ+9vw+IKL53Vd3IycoipAH1K9FWzN+Rr2d4UsGHxko4M04vJiB9eODvfhpG/+ospcIqiDYhtiVdysLOGjKIBUegLsCDbW+TL49oQs9nyy9ZOoZ7sZZz954GYIVOc7RLh/irBSqHxZmofe+Q6m96Z/JUzLkPNBx6S2Gl/bu69B1mUAGXwJ1Au9RAryJ1AHsSHrEsnz4DR649y5c9fj+dPIkbNVW/CVaMDn0fgz+XPmBOsg9bisDyb5SCtMHfkt9fXyB/hZylK51FEvyUtzDvf6P0ORy28yBej/AZ6F5tmYg6TBQyHyOj9yTwgXwZV4n1EiyOrsOxxVwk/Q11p6jgUZoFqFTIZGiCxhpwBtRT4E20LUob+eOIZB2tu7ZMFIDiaUflTi14m0lNsStHqwIZomG+AVKGWH4KW0hFUA7cffA1G3ImXwpXmqV7pmSvvohZdbYHcfr+q5N8MBYKXBfNIyeuWnvW4RjsTRRuNLk6e4JVBGblqaHQHTQQ3tJholpSBbub3MglsYBVDDa3kTReoJbG17N0pGLIWdSTz6aPMrn/gW510daPrMnIRRgBpy3z9CCWTwac4v955fXAVaEkoJNN97iTqOFD9zEkYBdKjxo2EJ1PNlP5SrwVeq2I/xl7t3w9MMD4865z0D+nq8T805jAKo8d32pUtlXtu6u0BWt3dL5T/o+2f5I9baFX0R3GyCX+J+xLx5poeDQbMRzl8YBVDM4+GHgEnI6p0EavxpAcOUu7d3KMBOrP8v51rc0jIItS/gt4PI62QlrAI8SfZ0zOn3hwyk/RotxoH29hugM8l37Z+Qj2DDTKNe/vJv6erq6uNxC1vvsdVf2Iyocc+FY+E7yB/qdK9dqidgezgRZkNnFDX6A/yIYwuuJ8GXoPppYXTQ/kFmVgRhN4LI+0+yMnd7w/qgwr0LD8FrkK/1PC76on/fok/O+DO2boVdCsdD+EhkKt8J3M99ZuonigI4BUXRu+hQQkrQaaWEAuTqBQXI//AzE3Vl40CnUzd8JloxQibC2gARkqoEzWINVBQgi62SYJ4qihAgpWdxaQqCpDFVkkwTzVFCBBSs7i0hUFyGKbJJgniqKECDVa2FhMpKECWmyRBPNUUIEHKzmJSlQUoslUSeKooQILUrYWESqoAsdgmCeKpoAINVrYWEykowJZYZYk8VRQj8D9pwr5xsUXNPQAAAABJRU5ErkJggg==" style="width: 1em; height: 1em;"> New</button><button id="menu-close">✕</button></div></div><div class="menu-tabs"><button id="main-levels-tab">Main</button><button id="custom-levels-tab">Custom</button></div><ul id="built-in-list" class="level-list"></ul><ul id="custom-level-list" class="level-list"></ul><input type="file" id="file-input" accept=".txt"><button id="import-button">Import Level (.txt)</button></div>
+    <div id="editor-overlay"><div id="editor-header"><button id="editor-exit-button">← Exit</button><input type="text" id="level-name-input" value="Unnamed"><button id="editor-undo-button" disabled>Undo</button><button id="editor-redo-button" disabled>Redo</button><button id="editor-info-button">?</button><div style="margin-left:auto;"></div><button id="editor-export-button">Export .txt</button><button id="editor-save-button" class="primary">Save to Levels</button></div><div id="editor-grid-container"><div id="editor-grid"></div></div><div id="editor-footer"><button id="add-rows-button">+ Add Rows</button><button id="add-cols-button">+ Add Columns</button></div><div id="editor-toolbar"><div class="tool-section"><button id="tool-tab-build">Build</button><button id="tool-tab-edit">Edit</button></div><div id="build-tab" class="tab-content"></div><div id="edit-tab" class="tab-content"><button data-tool="move" title="Move View"><svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M10 9h4V6h3l-5-5-5 5h3v3zm-1 1H6V7l-5 5 5 5v-3h3v-4zm14 2l-5-5v3h-3v4h3v3l5-5zm-9 3h-4v3H7l5 5 5-5h-3v-3z"/></svg></button><button data-tool="delete" title="Delete"><svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg></button><button id="desktop-add-rows-button" title="Add rows to the top">+ Add Rows</button><button id="desktop-add-cols-button" title="Add columns to the right">+ Add Columns</button><span style="opacity:0.5; align-self:center; margin-left:10px;">More edit features coming soon!</span></div></div><button id="editor-toolbar-toggle">Tools</button><div id="editor-side-toolbar"><div class="tool-section"><button id="side-tool-tab-build">Build</button><button id="side-tool-tab-edit">Edit</button></div><div id="side-build-tab" class="tab-content"></div><div id="side-edit-tab" class="tab-content"></div></div></div>
+    <div id="expander-modal" class="modal"><div class="modal-content"><h3>Level Expander</h3><input type="number" id="expander-input" value="10" min="1"><button id="expander-confirm">Add</button><button id="expander-cancel">Cancel</button></div></div>
+    <div id="info-modal" class="modal"><div class="modal-content"><h3>Icon Legend & Tips</h3><p>↑: Gravity Up Portal<br/>↓: Gravity Down Portal<br/>⚪: Pink Orb<br/>⬜: Pink Pad<br/>🔵: Blue Orb<br/>🟦: Blue Pad</p><hr><p><b>Important:</b> Levels must have a definite height. Use Ceiling blocks (C) for the top and Ground blocks (G) for the bottom to create level boundaries.</p><button id="info-close">Close</button></div></div>
+    <div id="editor-notification"></div>
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-
     const gameScreen = document.getElementById('game-screen');
+    const gameContainer = document.getElementById('game-container');
     const startButton = document.getElementById('start-button');
     const resetButton = document.getElementById('reset-button');
     const infoDisplay = document.getElementById('info');
@@ -211,7 +153,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const customLevelList = document.getElementById('custom-level-list');
     const importButton = document.getElementById('import-button');
     const fileInput = document.getElementById('file-input');
-
+    const isMobile = !window.matchMedia('(min-width: 1025px)').matches;
     const BUILT_IN_LEVELS = [
         {
             name: "Level 1",
@@ -237,10 +179,10 @@ GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG
 CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
 sssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss000000sssssssssssF
 0000000000000000000000000000000000000000000000000000000000000000000(gn)000000000(gn)0000000000000000F
-00000000000000000000000BBBBBBBBBBBBBBBBBBBBBBBBBBBB0000000000000000(gn)0000000000(gn)000000000000000F
+00000000000000000000000BBBBBBBBBBBBBBBBBBBBBBBBBBBB0000000000000000(gn)000000000(gn)000000000000000F
 000000000000000000000000000000ss000000ss000000000000000000000000000(gn)00000000000000000000000000000F
-0000000000000000000000000000000000000000000000000BBBBBBB000000000000000000000000(bg)0000000000000000F
-0000000000000000000000000000000000SS00000000S0000B00000BBBBBB000000000S0000000(Pj)000000000000000000F
+0000000000000000000000000000000000000000000000000BBBBBBB00000000000000000000(bg)0000000000000000F
+0000000000000000000000000000000000SS00000000S0000B00000BBBBBB000000000S000000(Pj)000000000000000000F
 00000000000000000000000000000BBBBBBBBBBBBBBBB0000B00000B0000BBBBBBBBBBBBBBBBBBBBBB00000000000000R000F
 03000000000000000000000000000BBBBBBBBBBBBBBBB0000B00000B0000B00000000000000000000B00000BBBBBBBBBB000F
 03000000000000000000000000000BB000000000000BB0000B00000B0000B00000000000000000000B00000BBBBBBBBBB000F
@@ -254,37 +196,18 @@ GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG
         }
     ];
     let customLevels = [];
-
-    const SCREEN_WIDTH_CHARS = 240, SCREEN_HEIGHT_CHARS = 80;
-    const GAME_UNITS_PER_BLOCK = 30;
+    const SCREEN_WIDTH_CHARS = 160, SCREEN_HEIGHT_CHARS = 39;
+    const CHAR_ASPECT_RATIO = 0.6;
     const CHARS_PER_BLOCK_V = 3, CHARS_PER_BLOCK_H = 6;
-
     const PHYSICS_TICK_RATE = 60;
     const PHYSICS_DELTA_TIME = 1 / PHYSICS_TICK_RATE;
     const PHYSICS = {
-        cube: {
-            gravity: 2955 / 10.0, hSpeed: 258.0 / 4.58,
-            jumpVelocity: -724.5 / 10.0,
-            jumpVelocityPink: -724.5 * 0.7 / 10.0,
-            jumpVelocityRed: -724.5 * 1.2 / 10.0,
-        },
-        ship: {
-            gravity: 2955 / 15.0, thrust: -4432.5 / 15.0,
-            hSpeed: 258.0 / 12.0,
-            maxUpwardVel: -25.0, maxDownwardVel: 25.0,
-        },
-        ball: {
-            gravity: 2955 / 10.0, hSpeed: 258.0 / 4.58,
-        },
-        wave: {
-            hSpeed: 258.0 / 4.58,
-        },
-        robot: {
-            gravity: 2955 / 10.0, hSpeed: 258.0 / 4.58,
-            jumpVelocity: -724.5 / 10.0,
-        }
+        cube: { gravity: 2955 / 10.0, hSpeed: 258.0 / 4.58, jumpVelocity: -724.5 / 10.0, jumpVelocityPink: -724.5 * 0.7 / 10.0, jumpVelocityRed: -724.5 * 1.2 / 10.0 },
+        ship: { gravity: 2955 / 15.0, thrust: -4432.5 / 15.0, hSpeed: 258.0 / 12.0, maxUpwardVel: -25.0, maxDownwardVel: 25.0 },
+        ball: { gravity: 2955 / 10.0, hSpeed: 258.0 / 4.58 },
+        wave: { hSpeed: 258.0 / 4.58 },
+        robot: { gravity: 2955 / 10.0, hSpeed: 258.0 / 4.58, jumpVelocity: -724.5 / 10.0 }
     };
-
     const SHAPES = {
         player: { cube:  ['╭███╮','█████','╰███╯'], ship:  ['  ╱','-██╮','`██╯'], ball:  ['╭─O─╮','╰─O─╯'], wave:  ['╱','─','╲'], robot: ['[O.O]','-▓-',' / \\ '], dead: ['X X',' X ','X X'] },
         block: { solid: ['██████','██████','██████'] },
@@ -293,24 +216,24 @@ GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG
         pad_yellow: ['██████','======'], pad_pink: ['██████','pppppp'], pad_red: ['██████','RRRRRR'], pad_blue: ['██████','BBBBBB'],
         portal: ['╱╲','||','╲╱'], win: ['\\*W*/','* I *','/*N*\\'],
     };
-    
     const TILE_MAP = {
-        'P': { type: 'player_start' }, 'F': { type: 'win' },
-        'B': { type: 'block_solid' }, 'G': { type: 'block_solid' }, 'C': { type: 'block_solid' },
-        'S': { type: 'spike_up' }, 's': { type: 'spike_down' },
-        'y': { type: 'orb_yellow' }, 'Y': { type: 'pad_yellow' },
-        'r': { type: 'orb_red' }, 'R': { type: 'pad_red' },
-        '(pj)': { type: 'orb_pink' }, '(Pj)': { type: 'pad_pink' },
-        '(bg)': { type: 'orb_blue' }, '(Bg)': { type: 'pad_blue' },
-        '1': { type: 'portal_cube' }, '2': { type: 'portal_ship' }, '3': { type: 'portal_ball' }, '4': { type: 'portal_wave' },
-        '(gn)': { type: 'portal_grav_down' }, '(gr)': { type: 'portal_grav_up' },
+        'P': { type: 'player_start', icon: 'P' }, 'F': { type: 'win', icon: 'F' }, 'B': { type: 'block_solid', icon: 'B' }, 'G': { type: 'block_solid', icon: 'G' }, 'C': { type: 'block_solid', icon: 'C' },
+        'S': { type: 'spike_up', icon: 'S' }, 's': { type: 'spike_down', icon: 's' }, 'y': { type: 'orb_yellow', icon: 'y' }, 'Y': { type: 'pad_yellow', icon: 'Y' }, 'r': { type: 'orb_red', icon: 'r' }, 'R': { type: 'pad_red', icon: 'R' },
+        '(pj)': { type: 'orb_pink', icon: '⚪' }, '(Pj)': { type: 'pad_pink', icon: '⬜' }, '(bg)': { type: 'orb_blue', icon: '🔵' }, '(Bg)': { type: 'pad_blue', icon: '🟦' },
+        '1': { type: 'portal_cube', icon: '1' }, '2': { type: 'portal_ship', icon: '2' }, '3': { type: 'portal_ball', icon: '3' }, '4': { type: 'portal_wave', icon: '4' },
+        '(gn)': { type: 'portal_grav_down', icon: '↓' }, '(gr)': { type: 'portal_grav_up', icon: '↑' },
     };
-
     let player, camera, gameRunning, inputState = { holding: false, pressedThisFrame: false }, timeAccumulator, screenBuffer, isGameOver, levelObjects, domGrid, lastScreenBuffer, activeLevel = {type: 'built-in', index: 0};
-    
+    const editorOverlay = document.getElementById('editor-overlay');
+    const editorGridContainer = document.getElementById('editor-grid-container');
+    const editorGrid = document.getElementById('editor-grid');
+    const editorState = { active: false, currentTool: 'build', selectedObject: 'B', levelData: [], levelName: 'Unnamed', undoStack: [], redoStack: [], isMoving: false, lastMovePos: {x:0, y:0}, editorDomGrid: [] };
     function initializeDomGrid() {
-        const fragment = document.createDocumentFragment();
+        gameScreen.innerHTML = '';
         domGrid = [];
+        const isGridRender = isMobile;
+        gameScreen.className = isGridRender ? 'grid-render' : 'pre-render';
+        const fragment = document.createDocumentFragment();
         for (let y = 0; y < SCREEN_HEIGHT_CHARS; y++) {
             const row = [];
             for (let x = 0; x < SCREEN_WIDTH_CHARS; x++) {
@@ -319,35 +242,65 @@ GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG
                 fragment.appendChild(span);
                 row.push(span);
             }
-            fragment.appendChild(document.createTextNode('\n'));
+            if(!isGridRender) fragment.appendChild(document.createTextNode('\n'));
             domGrid.push(row);
         }
-        gameScreen.innerHTML = '';
         gameScreen.appendChild(fragment);
     }
-
     function parseLevel(text) {
-        const lines = text.trim().split('\n'); const parsedObjects = []; let playerStart = { x: 5, y: 5 };
-        for (let y = 0; y < lines.length; y++) { const line = lines[y];
-            for (let x = 0; x < line.length; x++) {
-                const char = line[x]; if (char === '0' || char === ' ') continue; let token = char; let isUpsideDown = false;
-                if (char === '(') { const endIndex = line.indexOf(')', x); if (endIndex !== -1) { token = line.substring(x, endIndex + 1); x = endIndex; } }
-                if (line[x + 1] === '.' && line[x + 2] === 'U') { isUpsideDown = true; x += 2; }
-                let definition = TILE_MAP[token]; if (!definition) continue;
-                if (definition.type === 'player_start') { playerStart = { x: x, y: y }; continue; }
-                if (isUpsideDown) { if (definition.type === 'spike_up') definition = { type: 'spike_down' }; }
-                parsedObjects.push({ type: definition.type, x: x, y: y });
+        const lines = text.trim().split('\n');
+        const parsedObjects = [];
+        let playerStart = { x: 5, y: 5 };
+        for (let y = 0; y < lines.length; y++) {
+            const line = lines[y];
+            let gridX = 0;
+            let stringIndex = 0;
+            while (stringIndex < line.length) {
+                let token;
+                const char = line[stringIndex];
+                if (char === '0' || char === ' ') {
+                    stringIndex++;
+                    gridX++;
+                    continue;
+                } else if (char === '(') {
+                    const endIndex = line.indexOf(')', stringIndex);
+                    if (endIndex !== -1) {
+                        token = line.substring(stringIndex, endIndex + 1);
+                        stringIndex = endIndex + 1;
+                    } else {
+                        token = char;
+                        stringIndex++;
+                    }
+                } else {
+                    token = char;
+                    stringIndex++;
+                }
+                let isUpsideDown = false;
+                if (line.substring(stringIndex, stringIndex + 2) === '.U') {
+                    isUpsideDown = true;
+                    stringIndex += 2;
+                }
+                let definition = TILE_MAP[token];
+                if (definition) {
+                    if (definition.type === 'player_start') {
+                        playerStart = { x: gridX, y: y };
+                    } else {
+                        if (isUpsideDown && definition.type === 'spike_up') {
+                            definition = { type: 'spike_down' };
+                        }
+                        parsedObjects.push({ type: definition.type, x: gridX, y: y });
+                    }
+                }
+                gridX++;
             }
         }
         return { objects: parsedObjects, playerStart };
     }
-
     function resetGame(levelType = activeLevel.type, levelIndex = activeLevel.index) {
         activeLevel = { type: levelType, index: levelIndex };
         const levelSource = levelType === 'custom' ? customLevels : BUILT_IN_LEVELS;
         const level = levelSource[levelIndex];
         if (!level) { return; }
-
         const parsedLevel = parseLevel(level.data);
         levelObjects = [];
         for(const obj of parsedLevel.objects) {
@@ -356,8 +309,7 @@ GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG
         player = {
             x: parsedLevel.playerStart.x * CHARS_PER_BLOCK_H, y: parsedLevel.playerStart.y * CHARS_PER_BLOCK_V,
             w: 0, h: 0, vx: PHYSICS.cube.hSpeed, vy: 0,
-            gamemode: 'cube', gravity: PHYSICS.cube.gravity, onGround: false, angle: 0,
-            isDead: false,
+            gamemode: 'cube', gravity: PHYSICS.cube.gravity, onGround: false, angle: 0, isDead: false,
         };
         camera = { x: 0 }; gameRunning = false; isGameOver = false; timeAccumulator = 0;
         inputState = { holding: false, pressedThisFrame: false };
@@ -366,7 +318,6 @@ GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG
         infoDisplay.textContent = "Tap Start to Play!";
         initScreenBuffer();
     }
-    
     function startGame() {
         if (gameRunning || player.isDead || isGameOver) return;
         gameRunning = true; lastTime = performance.now();
@@ -374,21 +325,25 @@ GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG
         resetButton.style.display = 'inline-block';
         requestAnimationFrame(gameLoop);
     }
-
-    function handleInputDown(e) { e.preventDefault(); if (inputState) { inputState.holding = true; inputState.pressedThisFrame = true; } }
-    function handleInputUp(e) { e.preventDefault(); if (inputState) inputState.holding = false; }
+    function handleInputDown(e) {
+        if (e.target.tagName === 'INPUT' && e.key === 'Backspace') { return; }
+        e.preventDefault();
+        if (inputState) { inputState.holding = true; inputState.pressedThisFrame = true; }
+    }
+    function handleInputUp(e) {
+        e.preventDefault();
+        if (inputState) inputState.holding = false;
+    }
     window.addEventListener('keydown', handleInputDown); window.addEventListener('keyup', handleInputUp);
-    window.addEventListener('mousedown', handleInputDown); window.addEventListener('mouseup', handleInputUp);
-    window.addEventListener('touchstart', handleInputDown, { passive: false }); window.addEventListener('touchend', handleInputUp, { passive: false });
-    
+    gameContainer.addEventListener('mousedown', handleInputDown); gameContainer.addEventListener('mouseup', handleInputUp);
+    gameContainer.addEventListener('touchstart', handleInputDown, { passive: false }); gameContainer.addEventListener('touchend', handleInputUp, { passive: false });
     startButton.addEventListener('click', startGame);
     resetButton.addEventListener('click', () => { endLevel("Reset!", false); });
-    
     function handleInteractions() {
         let playerBox = { x: player.x, y: player.y, w: player.w, h: player.h };
         for (const obj of levelObjects) {
             if (obj.type.startsWith('block') || obj.type.startsWith('spike')) continue;
-            if (Math.abs(obj.px - player.x) > 150) continue;
+            if (Math.abs(obj.px - player.x) > 200) continue;
             let objBox = { x: obj.px, y: obj.py, w: obj.pw, h: obj.ph };
             const type = obj.type;
             if (type.startsWith('orb')) {
@@ -398,18 +353,15 @@ GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG
             const isColliding = playerBox.x < objBox.x + objBox.w && playerBox.x + playerBox.w > objBox.x && playerBox.y < objBox.y + objBox.h && playerBox.y + playerBox.h > objBox.y;
             if (isColliding) {
                 if (type.startsWith('portal')) {
-                     const lastGamemode = player.gamemode;
-                     let newGamemode = player.gamemode;
+                     const lastGamemode = player.gamemode; let newGamemode = player.gamemode;
                      switch(type) {
-                        case 'portal_ship': newGamemode = 'ship'; break; case 'portal_ball': newGamemode = 'ball'; break;
-                        case 'portal_wave': newGamemode = 'wave'; break; case 'portal_robot': newGamemode = 'robot'; break;
-                        case 'portal_cube': newGamemode = 'cube'; break;
+                        case 'portal_ship': newGamemode = 'ship'; break; case 'portal_ball': newGamemode = 'ball'; break; case 'portal_wave': newGamemode = 'wave'; break;
+                        case 'portal_robot': newGamemode = 'robot'; break; case 'portal_cube': newGamemode = 'cube'; break;
                         case 'portal_grav_up': player.gravity = -Math.abs(PHYSICS[player.gamemode].gravity); player.vy = 0; break;
                         case 'portal_grav_down': player.gravity = Math.abs(PHYSICS[player.gamemode].gravity); player.vy = 0; break;
                     }
                     if (lastGamemode !== newGamemode) {
-                        player.gamemode = newGamemode;
-                        const newModePhysics = PHYSICS[player.gamemode];
+                        player.gamemode = newGamemode; const newModePhysics = PHYSICS[player.gamemode];
                         player.gravity = newModePhysics.gravity; player.vx = newModePhysics.hSpeed;
                         if(player.gamemode === 'wave') player.vy = -player.vx;
                     }
@@ -418,8 +370,7 @@ GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG
                     if (type === 'pad_blue') { player.gravity *= -1; player.vy *= -1; }
                     else {
                         let jumpV = PHYSICS.cube.jumpVelocity;
-                        if (type === 'pad_pink') jumpV = PHYSICS.cube.jumpVelocityPink;
-                        if (type === 'pad_red') jumpV = PHYSICS.cube.jumpVelocityRed;
+                        if (type === 'pad_pink') jumpV = PHYSICS.cube.jumpVelocityPink; if (type === 'pad_red') jumpV = PHYSICS.cube.jumpVelocityRed;
                         player.vy = jumpV * Math.sign(player.gravity);
                     }
                 }
@@ -427,8 +378,7 @@ GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG
                     if (type === 'orb_blue') { player.gravity *= -1; player.vy *= -1; }
                     else {
                         let jumpV = PHYSICS.cube.jumpVelocity;
-                        if (type === 'orb_pink') jumpV = PHYSICS.cube.jumpVelocityPink;
-                        if (type === 'orb_red') jumpV = PHYSICS.cube.jumpVelocityRed;
+                        if (type === 'orb_pink') jumpV = PHYSICS.cube.jumpVelocityPink; if (type === 'orb_red') jumpV = PHYSICS.cube.jumpVelocityRed;
                         player.vy = jumpV * Math.sign(player.gravity);
                     }
                     inputState.pressedThisFrame = false;
@@ -437,7 +387,6 @@ GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG
             }
         }
     }
-
     function updatePhysics() {
         if (!gameRunning) return;
         player.w = SHAPES.player[player.gamemode][0]?.length || 1;
@@ -446,8 +395,7 @@ GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG
         switch(player.gamemode) {
             case 'cube': if (player.onGround && inputState.pressedThisFrame) player.vy = modePhysics.jumpVelocity * gravSign; break;
             case 'ship':
-                let netAcceleration = player.gravity;
-                if (inputState.holding) { netAcceleration += modePhysics.thrust; }
+                let netAcceleration = player.gravity; if (inputState.holding) { netAcceleration += modePhysics.thrust; }
                 player.vy += netAcceleration * PHYSICS_DELTA_TIME;
                 if(gravSign > 0) { player.vy = Math.max(modePhysics.maxUpwardVel, Math.min(modePhysics.maxDownwardVel, player.vy)); }
                 else { player.vy = Math.max(-modePhysics.maxDownwardVel, Math.min(-modePhysics.maxUpwardVel, player.vy)); }
@@ -459,7 +407,7 @@ GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG
         player.x += player.vx * PHYSICS_DELTA_TIME;
         for (const obj of levelObjects) {
             if (!obj.type.startsWith('block') && !obj.type.startsWith('spike')) continue;
-            if (Math.abs(obj.px - player.x) > 150) continue;
+            if (Math.abs(obj.px - player.x) > 200) continue;
             const playerBox = { x: player.x, y: player.y, w: player.w, h: player.h };
             const objBox = { x: obj.px, y: obj.py, w: obj.pw, h: obj.ph };
             if (playerBox.x < objBox.x + objBox.w && playerBox.x + playerBox.w > objBox.x && playerBox.y < objBox.y + objBox.h && playerBox.y + playerBox.h > objBox.y) {
@@ -472,7 +420,7 @@ GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG
         player.onGround = false;
         for (const obj of levelObjects) {
             if (!obj.type.startsWith('block') && !obj.type.startsWith('spike')) continue;
-            if (Math.abs(obj.px - player.x) > 150) continue;
+            if (Math.abs(obj.px - player.x) > 200) continue;
             const playerBox = { x: player.x, y: player.y, w: player.w, h: player.h };
             const objBox = { x: obj.px, y: obj.py, w: obj.pw, h: obj.ph };
             if (playerBox.x < objBox.x + objBox.w && playerBox.x + playerBox.w > objBox.x && playerBox.y < objBox.y + objBox.h && playerBox.y + playerBox.h > objBox.y) {
@@ -482,8 +430,7 @@ GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG
                     if (isLethalContact) return endLevel("Ouch!", false);
                 }
                 if (type.startsWith('block')) {
-                    const isFalling = player.vy * gravSign > 0;
-                    const isRising = player.vy * gravSign < 0;
+                    const isFalling = player.vy * gravSign > 0; const isRising = player.vy * gravSign < 0;
                     if (isFalling) {
                         if (gravSign > 0) player.y = obj.py - player.h; else player.y = obj.py + obj.ph;
                         player.vy = 0; player.onGround = true;
@@ -497,7 +444,6 @@ GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG
         }
         handleInteractions();
     }
-    function rotateShape(shape, angle) { return shape; }
     function initScreenBuffer() {
         screenBuffer = Array.from({ length: SCREEN_HEIGHT_CHARS }, () => Array.from({ length: SCREEN_WIDTH_CHARS }, () => ({ char: ' ', className: '' })));
         lastScreenBuffer = Array.from({ length: SCREEN_HEIGHT_CHARS }, () => Array.from({ length: SCREEN_WIDTH_CHARS }, () => ({ char: '?', className: '?' })));
@@ -509,10 +455,11 @@ GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG
                 screenBuffer[drawY][drawX] = { char: shape[r][c], className }; } } }
     }
     function render() {
+        if (!screenBuffer || !player || !domGrid) return;
         for (let y = 0; y < SCREEN_HEIGHT_CHARS; y++) { for (let x = 0; x < SCREEN_WIDTH_CHARS; x++) {
             screenBuffer[y][x] = { char: ' ', className: '' };
         }}
-        camera.x = player.x - 40;
+        camera.x = player.x - Math.floor(SCREEN_WIDTH_CHARS * 0.25);
         for(const obj of levelObjects) {
              if (obj.px + obj.pw < camera.x || obj.px > camera.x + SCREEN_WIDTH_CHARS) continue;
              const screenX = obj.px - camera.x, screenY = obj.py;
@@ -520,24 +467,17 @@ GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG
              if(obj.type === 'block_solid') { shape = SHAPES.block.solid; }
              else if(obj.type === 'spike_up') { shape = SHAPES.spike_up; }
              else if(obj.type === 'spike_down') { shape = SHAPES.spike_down; }
-             else if (obj.type.startsWith('pad_')) {
-                const color = obj.type.split('_')[1];
-                shape = SHAPES[`pad_${color}`] || SHAPES.pad_yellow;
-             }
-             else if (obj.type.startsWith('orb_')) {
-                const color = obj.type.split('_')[1];
-                shape = SHAPES[`orb_${color}`] || SHAPES.orb_yellow;
-             }
+             else if (obj.type.startsWith('pad_')) { const color = obj.type.split('_')[1]; shape = SHAPES[`pad_${color}`] || SHAPES.pad_yellow; }
+             else if (obj.type.startsWith('orb_')) { const color = obj.type.split('_')[1]; shape = SHAPES[`orb_${color}`] || SHAPES.orb_yellow; }
              else if(obj.type.startsWith('portal')) { shape = SHAPES.portal; }
              else if(obj.type === 'win') { shape = SHAPES.win; }
              if(shape) drawShape(screenX, screenY, shape, className);
         }
         let playerShape;
         if (player.isDead) { playerShape = SHAPES.player.dead; }
-        else { playerShape = SHAPES.player[player.gamemode]; if (player.angle !== 0) playerShape = rotateShape(playerShape, player.angle); }
+        else { playerShape = SHAPES.player[player.gamemode]; }
         player.w = playerShape[0]?.length || 1; player.h = playerShape.length || 1;
         drawShape(player.x - camera.x, player.y, playerShape, 'player');
-        
         for (let y = 0; y < SCREEN_HEIGHT_CHARS; y++) {
             for (let x = 0; x < SCREEN_WIDTH_CHARS; x++) {
                 const current = screenBuffer[y][x];
@@ -553,7 +493,6 @@ GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG
     function endLevel(message, isWin) {
         if (isGameOver || player.isDead) return;
         gameRunning = false;
-        
         if (isWin) {
             isGameOver = true;
             infoDisplay.textContent = message;
@@ -585,108 +524,399 @@ GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG
             infoDisplay.style.color = '#aaa';
         }
     }
-
     function populateLevelMenu() {
-        builtInList.innerHTML = '';
-        customLevelList.innerHTML = '';
+        builtInList.innerHTML = ''; customLevelList.innerHTML = '';
         BUILT_IN_LEVELS.forEach((level, index) => {
-            const li = document.createElement('li');
-            li.className = 'level-item';
-            li.textContent = level.name;
-            li.dataset.type = 'built-in';
-            li.dataset.index = index;
-            li.addEventListener('click', () => {
-                resetGame('built-in', index);
-                startGame();
-                closeMenu();
-            });
+            const li = document.createElement('li'); li.className = 'level-item'; li.textContent = level.name; li.dataset.type = 'built-in'; li.dataset.index = index;
+            li.addEventListener('click', () => { resetGame('built-in', index); startGame(); closeMenu(); });
             builtInList.appendChild(li);
         });
         customLevels.forEach((level, index) => {
             const li = document.createElement('li');
             li.className = 'level-item';
-            const nameSpan = document.createElement('span');
-            nameSpan.textContent = level.name;
-            li.appendChild(nameSpan);
-            const actionsDiv = document.createElement('div');
-            actionsDiv.className = 'level-item-actions';
-            const exportBtn = document.createElement('button');
-            exportBtn.textContent = '📥';
-            exportBtn.title = 'Export Level';
-            exportBtn.addEventListener('click', (e) => { e.stopPropagation(); exportLevel(index); });
-            actionsDiv.appendChild(exportBtn);
-            const deleteBtn = document.createElement('button');
-            deleteBtn.textContent = '🗑️';
-            deleteBtn.title = 'Delete Level';
-            deleteBtn.addEventListener('click', (e) => { e.stopPropagation(); deleteLevel(index); });
-            actionsDiv.appendChild(deleteBtn);
+            const nameSpan = document.createElement('span'); nameSpan.textContent = level.name; li.appendChild(nameSpan);
+            li.addEventListener('click', () => { resetGame('custom', index); startGame(); closeMenu(); });
+            const actionsDiv = document.createElement('div'); actionsDiv.className = 'level-item-actions';
+            const editBtn = document.createElement('button');
+            editBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" height="1em" viewBox="0 0 512 512" fill="currentColor"><path d="M471.6 21.7c-21.9-21.9-57.3-21.9-79.2 0L362.3 51.7l97.9 97.9 30.1-30.1c21.9-21.9 21.9-57.3 0-79.2L471.6 21.7zm-299.2 220c-6.1 6.1-10.8 13.6-13.5 21.9l-29.6 88.8c-2.9 8.6-.6 18.1 5.8 24.6s15.9 8.7 24.6 5.8l88.8-29.6c8.2-2.7 15.8-7.4 21.9-13.5L437.7 172.3 339.7 74.3 172.4 241.7zM96 64C43 64 0 107 0 160V416c0 53 43 96 96 96H352c53 0 96-43 96-96V320c0-17.7-14.3-32-32-32s-32 14.3-32 32v96c0 17.7-14.3 32-32 32H96c-17.7 0-32-14.3-32-32V160c0-17.7 14.3-32 32-32h96c17.7 0 32-14.3 32-32s-14.3-32-32-32H96z"/></svg>`;
+            editBtn.title = 'Edit Level';
+            editBtn.addEventListener('click', (e) => { e.stopPropagation(); openEditor(level); });
+            actionsDiv.appendChild(editBtn);
+            const exportBtn = document.createElement('button'); exportBtn.textContent = '📥'; exportBtn.title = 'Export Level';
+            exportBtn.addEventListener('click', (e) => { e.stopPropagation(); exportLevel(index); }); actionsDiv.appendChild(exportBtn);
+            const deleteBtn = document.createElement('button'); deleteBtn.textContent = '🗑️'; deleteBtn.title = 'Delete Level';
+            deleteBtn.addEventListener('click', (e) => { e.stopPropagation(); deleteLevel(index); }); actionsDiv.appendChild(deleteBtn);
             li.appendChild(actionsDiv);
-            li.dataset.type = 'custom';
-            li.dataset.index = index;
-            li.addEventListener('click', () => {
-                resetGame('custom', index);
-                startGame();
-                closeMenu();
-            });
             customLevelList.appendChild(li);
         });
+        document.getElementById('main-levels-tab').click();
     }
-
     function openMenu() { document.body.classList.add('menu-active'); }
     function closeMenu() { document.body.classList.remove('menu-active'); }
-
     menuToggle.addEventListener('click', openMenu);
     menuClose.addEventListener('click', closeMenu);
     menuOverlay.addEventListener('click', closeMenu);
     window.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeMenu(); });
-    
     importButton.addEventListener('click', () => fileInput.click());
     fileInput.addEventListener('change', (event) => {
-        const file = event.target.files[0];
-        if (!file) return;
+        const file = event.target.files[0]; if (!file) return;
         const reader = new FileReader();
         reader.onload = (e) => {
             const levelData = e.target.result;
             const levelName = prompt("Enter a name for the new level:", file.name.replace('.txt', '')) || "Custom Level";
             customLevels.push({ name: levelName, data: levelData });
-            saveCustomLevels();
-            populateLevelMenu();
+            saveCustomLevels(); populateLevelMenu();
         };
-        reader.readAsText(file);
-        fileInput.value = '';
+        reader.readAsText(file); fileInput.value = '';
     });
-
-    function saveCustomLevels() {
-        localStorage.setItem('asciiGDCustomLevels', JSON.stringify(customLevels));
+    function saveCustomLevels() { localStorage.setItem('asciiGDCustomLevels', JSON.stringify(customLevels)); }
+    function loadCustomLevels() { const saved = localStorage.getItem('asciiGDCustomLevels'); if (saved) { customLevels = JSON.parse(saved); } }
+    function deleteLevel(index) { if (confirm(`Are you sure you want to delete "${customLevels[index].name}"?`)) { customLevels.splice(index, 1); saveCustomLevels(); populateLevelMenu(); } }
+    function exportLevel(index) {
+        const level = customLevels[index]; const blob = new Blob([level.data.trim()], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob); const a = document.createElement('a');
+        a.href = url; a.download = `${level.name.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.txt`;
+        document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
     }
-    function loadCustomLevels() {
-        const saved = localStorage.getItem('asciiGDCustomLevels');
-        if (saved) { customLevels = JSON.parse(saved); }
-    }
-    function deleteLevel(index) {
-        if (confirm(`Are you sure you want to delete "${customLevels[index].name}"?`)) {
-            customLevels.splice(index, 1);
-            saveCustomLevels();
-            populateLevelMenu();
+    function adaptScreenSize() {
+        const containerWidth = gameContainer.clientWidth;
+        const containerHeight = gameContainer.clientHeight;
+        const isGridRender = isMobile;
+        if (isGridRender) {
+            const cellHeight = containerHeight / SCREEN_HEIGHT_CHARS;
+            const cellWidth = containerWidth / SCREEN_WIDTH_CHARS;
+            for(let y = 0; y < SCREEN_HEIGHT_CHARS; y++) {
+                for (let x = 0; x < SCREEN_WIDTH_CHARS; x++) {
+                    if(!domGrid[y] || !domGrid[y][x]) continue;
+                    const span = domGrid[y][x];
+                    span.style.top = `${y * cellHeight}px`;
+                    span.style.left = `${x * cellWidth}px`;
+                    span.style.height = `${cellHeight}px`;
+                    span.style.width = `${cellWidth}px`;
+                    span.style.fontSize = `${cellHeight * 0.95}px`;
+                    span.style.lineHeight = `${cellHeight}px`;
+                }
+            }
+        } else {
+            const fontSizeForHeight = containerHeight / SCREEN_HEIGHT_CHARS;
+            const fontSizeForWidth = containerWidth / (SCREEN_WIDTH_CHARS * CHAR_ASPECT_RATIO);
+            const optimalFontSize = Math.floor(Math.min(fontSizeForHeight, fontSizeForWidth) * 100) / 100;
+            gameScreen.style.fontSize = `${optimalFontSize}px`;
         }
     }
-    function exportLevel(index) {
-        const level = customLevels[index];
-        const blob = new Blob([level.data.trim()], { type: 'text/plain' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `${level.name.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.txt`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
+    const CELL_SIZE = 32;
+    const editorUndoBtn = document.getElementById('editor-undo-button');
+    const editorRedoBtn = document.getElementById('editor-redo-button');
+    function pushToHistory(isUndoable = true) {
+        if(isUndoable) {
+            editorState.undoStack.push(JSON.stringify({data: editorState.levelData, name: editorState.levelName}));
+            editorState.redoStack = [];
+            updateUndoRedoButtons();
+        }
     }
+    function updateUndoRedoButtons() {
+        editorUndoBtn.disabled = editorState.undoStack.length <= 1;
+        editorRedoBtn.disabled = editorState.redoStack.length === 0;
+    }
+    function undo() {
+        if (editorState.undoStack.length <= 1) return;
+        editorState.redoStack.push(JSON.stringify({data: editorState.levelData, name: editorState.levelName}));
+        const prevState = JSON.parse(editorState.undoStack.pop());
+        editorState.levelData = prevState.data;
+        editorState.levelName = prevState.name;
+        document.getElementById('level-name-input').value = editorState.levelName;
+        renderEditorGrid();
+        updateUndoRedoButtons();
+        autoSaveToLocalStorage();
+    }
+    function redo() {
+        if (editorState.redoStack.length === 0) return;
+        editorState.undoStack.push(JSON.stringify({data: editorState.levelData, name: editorState.levelName}));
+        const nextState = JSON.parse(editorState.redoStack.pop());
+        editorState.levelData = nextState.data;
+        editorState.levelName = nextState.name;
+        document.getElementById('level-name-input').value = editorState.levelName;
+        renderEditorGrid();
+        updateUndoRedoButtons();
+        autoSaveToLocalStorage();
+    }
+    function updateEditorCell(x, y) {
+        const cell = editorState.editorDomGrid[y][x];
+        const token = editorState.levelData[y][x];
+        cell.textContent = '';
+        cell.className = 'editor-cell';
+        if (token !== '0') {
+            const tile = TILE_MAP[token];
+            if (tile) {
+                cell.textContent = tile.icon;
+                cell.className += ` ${tile.type.replace(/_/g, '-')}`;
+            } else {
+                cell.textContent = token;
+            }
+        }
+    }
+    function renderEditorGrid() {
+        const height = editorState.levelData.length;
+        const width = editorState.levelData[0].length;
+        editorGrid.innerHTML = '';
+        editorGrid.style.width = `${width * CELL_SIZE}px`;
+        editorGrid.style.height = `${height * CELL_SIZE}px`;
+        const fragment = document.createDocumentFragment();
+        editorState.editorDomGrid = [];
+        for (let y = 0; y < height; y++) {
+            const row = [];
+            for (let x = 0; x < width; x++) {
+                const cell = document.createElement('div');
+                cell.style.top = `${y * CELL_SIZE}px`;
+                cell.style.left = `${x * CELL_SIZE}px`;
+                cell.style.width = `${CELL_SIZE}px`;
+                cell.style.height = `${CELL_SIZE}px`;
+                cell.dataset.x = x;
+                cell.dataset.y = y;
+                fragment.appendChild(cell);
+                row.push(cell);
+            }
+            editorState.editorDomGrid.push(row);
+        }
+        editorGrid.appendChild(fragment);
+        for (let y = 0; y < height; y++) {
+            for (let x = 0; x < width; x++) {
+                updateEditorCell(x, y);
+            }
+        }
+    }
+    function openEditor(levelToEdit = null) {
+        editorState.active = true;
+        editorOverlay.style.display = 'flex';
+        editorState.undoStack = [];
+        editorState.redoStack = [];
+        if (levelToEdit) {
+            editorState.levelName = levelToEdit.name;
+            const lines = levelToEdit.data.trim().split('\n');
+            let maxWidth = 0;
+            const gridData = lines.map(line => {
+                const row = []; let gridX = 0; let stringIndex = 0;
+                while (stringIndex < line.length) {
+                    let token; const char = line[stringIndex];
+                    if (char === '0' || char === ' ') { token = '0'; stringIndex++; }
+                    else if (char === '(') {
+                        const endIndex = line.indexOf(')', stringIndex);
+                        if (endIndex !== -1) { token = line.substring(stringIndex, endIndex + 1); stringIndex = endIndex + 1; }
+                        else { token = char; stringIndex++; }
+                    } else { token = char; stringIndex++; }
+                    row.push(token); gridX++;
+                }
+                if(gridX > maxWidth) maxWidth = gridX;
+                return row;
+            });
+            gridData.forEach(row => { while(row.length < maxWidth) row.push('0'); });
+            editorState.levelData = gridData;
+        } else {
+            editorState.levelName = "Unnamed";
+            editorState.levelData = Array.from({ length: 20 }, () => Array(100).fill('0'));
+        }
+        document.getElementById('level-name-input').value = editorState.levelName;
+        pushToHistory();
+        renderEditorGrid();
+        updateUndoRedoButtons();
+    }
+    function closeEditor() {
+        if(confirm("Exit editor? Unsaved changes to the custom level list will be lost. (Work is auto-saved and can be restored later).")) {
+            editorState.active = false;
+            editorOverlay.style.display = 'none';
+        }
+    }
+    function convertGridDataToLevelString() {
+        const levelData = editorState.levelData;
+        let highestObjectRowIndex = -1;
+        for (let y = 0; y < levelData.length; y++) {
+            if (levelData[y].some(cell => cell !== '0')) {
+                highestObjectRowIndex = y;
+                break;
+            }
+        }
+        if (highestObjectRowIndex === -1) { return ""; }
+        const newTopRowIndex = Math.max(0, highestObjectRowIndex - 5);
+        const trimmedLevelData = levelData.slice(newTopRowIndex);
+        return trimmedLevelData.map(row => row.join('')).join('\n');
+    }
+    function autoSaveToLocalStorage() {
+        const level = {name: editorState.levelName, data: convertGridDataToLevelString()};
+        localStorage.setItem('asciiGDEditorLevel', JSON.stringify(level));
+    }
+    function showNotification(message) {
+        const el = document.getElementById('editor-notification');
+        el.textContent = message;
+        el.style.opacity = '1';
+        setTimeout(() => el.style.opacity = '0', 1500);
+    }
+    function setupEditor() {
+        document.getElementById('new-level-button').addEventListener('click', () => openEditor());
+        document.getElementById('editor-exit-button').addEventListener('click', closeEditor);
+        editorUndoBtn.addEventListener('click', undo);
+        editorRedoBtn.addEventListener('click', redo);
+        const nameInput = document.getElementById('level-name-input');
+        nameInput.addEventListener('change', () => {
+            pushToHistory();
+            editorState.levelName = nameInput.value;
+            autoSaveToLocalStorage();
+        });
+        const toolCategories = { "Blocks": ['B', 'G', 'C', 'P', 'F'], "Spikes": ['S', 's'], "Orbs": ['y', '(pj)', 'r', '(bg)'], "Pads": ['Y', 'R', '(Pj)', '(Bg)'], "Portals": ['1', '2', '3', '4', '(gr)', '(gn)'] };
+        const buildTabs = [document.getElementById('build-tab'), document.getElementById('side-build-tab')];
+        const editTabs = [document.getElementById('edit-tab'), document.getElementById('side-edit-tab')];
+        buildTabs.forEach(buildTab => {
+            for(const category in toolCategories) {
+                const btn = document.createElement('button'); btn.textContent = category;
+                btn.addEventListener('click', () => {
+                    buildTab.querySelectorAll('.tool-category-content').forEach(el => el.style.display = 'none');
+                    buildTab.querySelector(`#${buildTab.id}-category-${category}`).style.display = 'flex';
+                });
+                buildTab.appendChild(btn);
+            }
+            const buildToolContent = document.createElement('div'); buildToolContent.style.display = 'flex'; buildToolContent.style.flexWrap = 'wrap'; buildToolContent.style.gap = '5px'; buildTab.appendChild(buildToolContent);
+            for(const category in toolCategories) {
+                const container = document.createElement('div'); container.id = `${buildTab.id}-category-${category}`; container.className = 'tool-category-content'; container.style.display = 'none'; container.style.gap = '5px'; container.style.flexWrap = 'wrap';
+                toolCategories[category].forEach(token => {
+                    const tile = TILE_MAP[token];
+                    const btn = document.createElement('button'); btn.textContent = tile.icon; btn.title = tile.type; btn.className = tile.type.replace(/_/g, '-'); btn.dataset.token = token;
+                    btn.addEventListener('click', () => {
+                        editorState.selectedObject = token;
+                        showNotification(`Selected ${tile.type}`);
+                        document.querySelectorAll('#editor-overlay button').forEach(b => b.classList.remove('active'));
+                        btn.classList.add('active');
+                    });
+                    container.appendChild(btn);
+                });
+                buildToolContent.appendChild(container);
+            }
+        });
+        editTabs[1].innerHTML = editTabs[0].innerHTML;
+        document.querySelector('#side-edit-tab #desktop-add-rows-button')?.remove();
+        document.querySelector('#side-edit-tab #desktop-add-cols-button')?.remove();
 
+        document.querySelectorAll('#tool-tab-build, #side-tool-tab-build').forEach(el => el.addEventListener('click', () => {
+            editorState.currentTool = 'build';
+            buildTabs.forEach(t => t.classList.add('active')); editTabs.forEach(t => t.classList.remove('active'));
+        }));
+        document.querySelectorAll('#tool-tab-edit, #side-tool-tab-edit').forEach(el => el.addEventListener('click', () => {
+            editorState.currentTool = 'edit';
+            editTabs.forEach(t => t.classList.add('active')); buildTabs.forEach(t => t.classList.remove('active'));
+        }));
+        document.querySelectorAll('#edit-tab button, #side-edit-tab button').forEach(btn => btn.addEventListener('click', () => {
+            editorState.currentTool = btn.dataset.tool;
+            document.querySelectorAll('#edit-tab button, #side-edit-tab button').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        }));
+        document.getElementById('tool-tab-build').click();
+        document.getElementById('side-tool-tab-build').click();
+        document.querySelector('#build-tab > button').click();
+        document.querySelector('#side-build-tab > button').click();
+        document.querySelector('.tool-category-content button').click();
+        editorGridContainer.addEventListener('mousedown', (e) => {
+            if (e.target.classList.contains('editor-cell')) {
+                const x = parseInt(e.target.dataset.x), y = parseInt(e.target.dataset.y);
+                if (editorState.currentTool === 'build' || editorState.currentTool === 'delete') {
+                    pushToHistory();
+                    const tokenToPlace = editorState.currentTool === 'build' ? editorState.selectedObject : '0';
+                    if (editorState.levelData[y][x] !== tokenToPlace) {
+                        editorState.levelData[y][x] = tokenToPlace;
+                        updateEditorCell(x,y);
+                        autoSaveToLocalStorage();
+                    }
+                }
+            }
+            if (editorState.currentTool === 'move') {
+                editorState.isMoving = true;
+                editorGridContainer.style.cursor = 'grabbing';
+                editorState.lastMovePos = { x: e.clientX, y: e.clientY };
+            }
+        });
+        window.addEventListener('mouseup', () => { editorState.isMoving = false; editorGridContainer.style.cursor = 'grab'; });
+        window.addEventListener('mousemove', (e) => {
+            if(editorState.isMoving) {
+                const dx = e.clientX - editorState.lastMovePos.x; const dy = e.clientY - editorState.lastMovePos.y;
+                editorGridContainer.scrollLeft -= dx; editorGridContainer.scrollTop -= dy;
+                editorState.lastMovePos = { x: e.clientX, y: e.clientY };
+            }
+        });
+        const expanderModal = document.getElementById('expander-modal');
+        const expanderInput = document.getElementById('expander-input');
+        let expanderType;
+        document.getElementById('add-rows-button').addEventListener('click', () => { expanderType = 'row'; expanderInput.max = 50; expanderModal.style.display = 'flex'; });
+        document.getElementById('add-cols-button').addEventListener('click', () => { expanderType = 'col'; expanderInput.max = 100; expanderModal.style.display = 'flex'; });
+        
+        document.getElementById('desktop-add-rows-button').addEventListener('click', () => { expanderType = 'row'; expanderInput.max = 50; expanderModal.style.display = 'flex'; });
+        document.getElementById('desktop-add-cols-button').addEventListener('click', () => { expanderType = 'col'; expanderInput.max = 100; expanderModal.style.display = 'flex'; });
+
+        document.getElementById('expander-cancel').addEventListener('click', () => expanderModal.style.display = 'none');
+        document.getElementById('expander-confirm').addEventListener('click', () => {
+            const amount = parseInt(expanderInput.value);
+            if (amount > 0) {
+                pushToHistory();
+                if (expanderType === 'row') {
+                    const width = editorState.levelData.length > 0 ? editorState.levelData[0].length : 100;
+                    for(let i=0; i<amount; i++) editorState.levelData.unshift(Array(width).fill('0'));
+                } else {
+                    for(let i=0; i<amount; i++) editorState.levelData.forEach(row => row.push('0'));
+                }
+                renderEditorGrid();
+                autoSaveToLocalStorage();
+            }
+            expanderModal.style.display = 'none';
+        });
+        document.getElementById('editor-info-button').addEventListener('click', () => document.getElementById('info-modal').style.display = 'flex');
+        document.getElementById('info-close').addEventListener('click', () => document.getElementById('info-modal').style.display = 'none');
+        document.getElementById('editor-save-button').addEventListener('click', () => {
+            const newLevel = { name: editorState.levelName, data: convertGridDataToLevelString() };
+            let existingIndex = customLevels.findIndex(l => l.name === newLevel.name);
+            if(existingIndex !== -1) { customLevels[existingIndex] = newLevel; }
+            else { customLevels.push(newLevel); }
+            saveCustomLevels();
+            populateLevelMenu();
+            showNotification(`Saved "${newLevel.name}" to custom levels!`);
+            closeEditor();
+        });
+        document.getElementById('editor-export-button').addEventListener('click', () => {
+            const level = { name: editorState.levelName, data: convertGridDataToLevelString() };
+            const blob = new Blob([level.data.trim()], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${level.name.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.txt`;
+            document.body.appendChild(a); a.click(); document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        });
+        document.getElementById('editor-toolbar-toggle').addEventListener('click', () => editorOverlay.classList.toggle('toolbar-open'));
+        const savedWork = localStorage.getItem('asciiGDEditorLevel');
+        if (savedWork) {
+            if(confirm("Unsaved editor work found. Do you want to restore it?")) {
+                const level = JSON.parse(savedWork);
+                openEditor({name: level.name, data: level.data});
+            } else {
+                localStorage.removeItem('asciiGDEditorLevel');
+            }
+        }
+    }
+    document.getElementById('main-levels-tab').addEventListener('click', () => {
+        document.getElementById('main-levels-tab').classList.add('active');
+        document.getElementById('custom-levels-tab').classList.remove('active');
+        document.getElementById('built-in-list').classList.add('active');
+        document.getElementById('custom-level-list').classList.remove('active');
+    });
+    document.getElementById('custom-levels-tab').addEventListener('click', () => {
+        document.getElementById('main-levels-tab').classList.remove('active');
+        document.getElementById('custom-levels-tab').classList.add('active');
+        document.getElementById('built-in-list').classList.remove('active');
+        document.getElementById('custom-level-list').classList.add('active');
+    });
+    let resizeTimeout;
+    window.addEventListener('resize', () => { clearTimeout(resizeTimeout); resizeTimeout = setTimeout(() => { adaptScreenSize(); if(editorState.active) renderEditorGrid(); else render(); }, 100); });
     initializeDomGrid();
+    adaptScreenSize();
     loadCustomLevels();
     populateLevelMenu();
     resetGame();
+    setupEditor();
     render();
 });
 </script>
