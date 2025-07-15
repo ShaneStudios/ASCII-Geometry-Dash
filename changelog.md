@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [v0.04-beta] - 07-14-2025
+
+This update is pretty significant. Just read the stuffs below for this entry.
+
+### Fixed:
+- **Multi-character Object Parsing:** Fixed the odd placement of objects that are represented as multiple characters, such as "(gn)".
+- **Mobile support:** Mobile is now fully supported, even in the editor.
+
+### Added:
+- **Level Editor:** This is one of the main focuses of this update. There is now a button in the Levels menu that opens the editor, which is filled with many, many features.
+
+### Changed:
+- **Levels Menu Layout:** Fefault/main levels and custom levels are now in separate tabs to make things more organized.
+
+---
+
 ## [v0.03-beta] - 07-10-2025
 
 This update introduces updated an ball trajectory, support for multiple levels & exporting/importing .txt files as levels, and added functionality for the pink, red, and blue pads and orbs.
